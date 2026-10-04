@@ -215,8 +215,8 @@ def google_news(query, market, n=3):
 
 # ---------------------------------------------------------------- AI comment
 def ai_comment(row, model):
-    import anthropic
-    client = anthropic.Anthropic()
+    from google import genai
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     news = "\n".join(f"- {h['title']}" for h in row["news"]) or "- (no recent news)"
     prompt = f"""Stock: {row['name']} ({row['ticker']}), compared with {row['index']}.
 Stock 20d MA slope: {row['ma20_slope_%']}%, index 20d MA slope: {row['idx_ma20_slope_%']}%.
@@ -228,9 +228,8 @@ Recent headlines:
 In 2 short sentences, explain the most likely reason this stock is stronger than its index.
 Use only the information above. If the headlines don't explain it, say so.
 Answer first in English, then the same in Korean on a new line starting with "KR:"."""
-    msg = client.messages.create(model=model, max_tokens=300,
-                                 messages=[{"role": "user", "content": prompt}])
-    return msg.content[0].text.strip()
+    resp = client.models.generate_content(model=model, contents=prompt)
+    return (resp.text or "").strip()
 
 
 # ---------------------------------------------------------------- report
@@ -284,8 +283,8 @@ def main():
                     help="largest N stocks per KR market to scan")
     ap.add_argument("--themes", action="store_true", help="add Naver themes / sectors")
     ap.add_argument("--news", action="store_true", help="add Google News headlines")
-    ap.add_argument("--ai", action="store_true", help="add AI reason (needs ANTHROPIC_API_KEY)")
-    ap.add_argument("--model", default="claude-sonnet-5-5")
+    ap.add_argument("--ai", action="store_true", help="add AI reason (needs GEMINI_API_KEY)")
+    ap.add_argument("--model", default="gemini-3.5-flash")
     a = ap.parse_args()
 
     frames = []
@@ -322,8 +321,8 @@ def main():
     results["themes"], results["news"] = themes, news
 
     if a.ai:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY not set -> skipping AI comments.")
+        if not os.environ.get("GEMINI_API_KEY"):
+            print("GEMINI_API_KEY not set -> skipping AI comments.")
         else:
             for _, r in results.iterrows():
                 try:

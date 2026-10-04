@@ -25,13 +25,13 @@ Output: `strong_YYYYMMDD.csv` and `strong_YYYYMMDD.html` (open in browser).
 결과: CSV와 HTML 파일이 생깁니다. HTML은 브라우저로 여세요.
 
 ## 3. AI comments / AI 코멘트
-Get an API key at console.anthropic.com, then:
+Uses Google Gemini (`gemini-3.5-flash`). Get a key at aistudio.google.com, then:
 API 키를 발급받은 뒤 설정하세요:
 ```
 # Windows
-set ANTHROPIC_API_KEY=sk-ant-...
+set GEMINI_API_KEY=your-key
 # Mac / Linux
-export ANTHROPIC_API_KEY=sk-ant-...
+export GEMINI_API_KEY=your-key
 ```
 Cost is small (one short request per stock). 종목당 짧은 요청 1회라 비용이 적습니다.
 
@@ -70,7 +70,7 @@ Runs weekdays ~07:00 SGT and publishes to `https://<your-id>.github.io/<repo>/`.
    ```
 3. Repo → **Settings → Pages** → Source: **GitHub Actions**.
 4. Repo → **Settings → Secrets and variables → Actions → New repository secret**
-   → Name `ANTHROPIC_API_KEY`, value `sk-ant-...` (for AI comments / AI 코멘트용).
+   → Name `GEMINI_API_KEY`, value = your Gemini key (for AI comments / AI 코멘트용).
 5. Repo → **Actions** → *Daily screener* → **Run workflow** (first test / 첫 테스트).
    Takes ~10–20 min. Then open the Pages URL. / 10~20분 후 주소를 여세요.
 

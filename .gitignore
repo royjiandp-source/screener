@@ -1,0 +1,8 @@
+__pycache__/
+.DS_Store
+screener_backup.py
+strong_screener/
+strong_screener.zip
+naver_themes.json
+/strong_*.html
+/strong_*.csv

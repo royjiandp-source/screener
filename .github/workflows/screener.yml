@@ -1,0 +1,70 @@
+# Runs the screener every weekday morning and publishes the result to GitHub Pages.
+# 매일 평일 아침 스크리너를 실행하고 결과를 GitHub Pages에 올립니다.
+name: Daily screener
+
+on:
+  schedule:
+    - cron: "50 22 * * 0-4"   # 22:50 UTC Sun-Thu = 06:50 SGT Mon-Fri (GitHub may start a bit late)
+  workflow_dispatch:           # "Run workflow" button for a manual run / 수동 실행 버튼
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: screener
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Singapore                                   # file date = Singapore date
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}        # empty -> AI comments skipped
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Week number (for Naver theme cache)
+        id: wk
+        run: echo "week=$(date +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Naver theme cache
+        uses: actions/cache@v4
+        with:
+          path: naver_themes.json
+          key: naver-themes-${{ steps.wk.outputs.week }}
+          restore-keys: naver-themes-
+
+      - name: Run screener
+        run: python screener.py --themes --news --ai
+
+      - name: Build site
+        run: python make_site.py
+
+      - name: Save reports to the repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898729+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "Report $(date +%Y-%m-%d)"
+          git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploy
+        uses: actions/deploy-pages@v4

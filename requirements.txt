@@ -1,0 +1,6 @@
+yfinance
+finance-datareader
+pandas
+requests
+lxml
+google-genai
