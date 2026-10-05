@@ -51,6 +51,20 @@ jobs:
       - name: Run screener
         run: python screener.py --themes --news --ai
 
+      - name: Restore investment DB (keeps news history)
+        uses: actions/cache@v4
+        with:
+          path: investment/data
+          key: invest-db-${{ github.run_id }}
+          restore-keys: invest-db-
+
+      - name: Run investment idea pipeline
+        continue-on-error: true          # never blocks the screener report
+        working-directory: investment
+        run: |
+          pip install -r requirements.txt
+          python -m app.pipeline all --export ../docs/invest/index.html
+
       - name: Build site
         run: python make_site.py
 

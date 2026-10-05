@@ -65,6 +65,7 @@ li a{{color:#58a6ff}}.sub,li span{{color:#8b949e}}}}
 <h1>Stocks stronger than the index</h1>
 <p class="sub">지수보다 강한 종목 · SG / US / KR · updated weekdays ~07:00 SGT</p>
 {latest}
+<a class="btn" style="background:#0969da" href="invest/">AI investment ideas / AI 투자 아이디어 →</a>
 <h2 style="font-size:16px">All reports / 전체 결과</h2>
 <ul>{''.join(rows)}</ul>
 <footer>Daily data from Yahoo Finance. Not financial advice. / 투자 조언이 아닙니다.<br>

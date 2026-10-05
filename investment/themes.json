@@ -1,0 +1,94 @@
+{
+  "_note": "Edit freely. theme -> industries, news keywords, candidate tickers per market, industry risks. / 자유롭게 수정하세요.",
+  "themes": {
+    "AI Infrastructure": {
+      "industries": ["GPU", "HBM", "Data Center", "Networking", "Cooling", "Power Infrastructure"],
+      "keywords": ["ai infrastructure", "gpu", "hbm", "ai chip", "ai server", "nvidia", "ai 인프라", "ai 반도체", "고대역폭"],
+      "tickers": {"US": ["NVDA", "TSM", "AVGO", "ANET", "MU", "VRT"], "KR": ["000660.KS", "005930.KS"], "SG": ["AJBU.SI"]},
+      "industry_risks": ["tariffs"]
+    },
+    "Semiconductor": {
+      "industries": ["Equipment", "Foundry", "Memory", "Design"],
+      "keywords": ["semiconductor", "chipmaker", "foundry", "lithography", "wafer", "반도체", "파운드리", "메모리"],
+      "tickers": {"US": ["ASML", "AMAT", "LRCX", "KLAC", "AMD"], "KR": ["042700.KS", "000660.KS"], "SG": ["AWX.SI", "558.SI"]},
+      "industry_risks": ["tariffs", "regulation"]
+    },
+    "Power Infrastructure": {
+      "industries": ["Grid", "Transformers", "Electrical Equipment", "Utilities"],
+      "keywords": ["power grid", "transformer", "electricity demand", "utility", "전력", "변압기", "전력망"],
+      "tickers": {"US": ["ETN", "GEV", "PWR", "VRT"], "KR": ["267260.KS", "010120.KS"], "SG": ["U96.SI"]},
+      "industry_risks": ["rates"]
+    },
+    "Data Center": {
+      "industries": ["Data Center REIT", "Cooling", "Networking"],
+      "keywords": ["data center", "datacenter", "hyperscale", "데이터센터"],
+      "tickers": {"US": ["EQIX", "DLR"], "KR": [], "SG": ["AJBU.SI", "DCRU.SI"]},
+      "industry_risks": ["rates"]
+    },
+    "Cloud": {
+      "industries": ["Cloud Platform", "Software", "SaaS"],
+      "keywords": ["cloud", "saas", "azure", "aws", "software", "클라우드"],
+      "tickers": {"US": ["MSFT", "AMZN", "GOOGL", "ORCL", "SNOW"], "KR": ["035420.KS"], "SG": []},
+      "industry_risks": ["regulation"]
+    },
+    "Cyber Security": {
+      "industries": ["Security Software", "Network Security"],
+      "keywords": ["cybersecurity", "cyber security", "cyberattack", "ransomware", "hack", "사이버 보안", "보안", "해킹"],
+      "tickers": {"US": ["CRWD", "PANW", "FTNT", "ZS", "NET"], "KR": ["053800.KQ"], "SG": []},
+      "industry_risks": []
+    },
+    "Nuclear": {
+      "industries": ["Nuclear Power", "Uranium", "SMR"],
+      "keywords": ["nuclear", "uranium", "smr", "reactor", "원전", "원자력", "우라늄"],
+      "tickers": {"US": ["CEG", "CCJ", "BWXT", "VST"], "KR": ["034020.KS", "052690.KS"], "SG": []},
+      "industry_risks": ["regulation"]
+    },
+    "Defense": {
+      "industries": ["Aerospace", "Missiles", "Military Systems"],
+      "keywords": ["defense", "defence", "military", "missile", "weapons", "방산", "국방", "미사일"],
+      "tickers": {"US": ["LMT", "RTX", "NOC", "GD", "LHX"], "KR": ["012450.KS", "079550.KS", "047810.KS"], "SG": ["S63.SI"]},
+      "industry_risks": ["regulation"]
+    },
+    "Healthcare": {
+      "industries": ["Pharma", "Biotech", "Medical Devices", "Hospitals"],
+      "keywords": ["healthcare", "pharma", "biotech", "drug", "fda", "obesity", "헬스케어", "제약", "바이오"],
+      "tickers": {"US": ["LLY", "UNH", "JNJ", "ABBV", "ISRG"], "KR": ["207940.KS", "068270.KS"], "SG": ["BSL.SI", "Q0F.SI"]},
+      "industry_risks": ["regulation"]
+    },
+    "EV": {
+      "industries": ["EV Makers", "Batteries", "Lithium"],
+      "keywords": ["electric vehicle", " ev ", "battery", "lithium", "전기차", "배터리", "2차전지"],
+      "tickers": {"US": ["TSLA", "ALB"], "KR": ["373220.KS", "006400.KS", "005380.KS"], "SG": []},
+      "industry_risks": ["tariffs"]
+    },
+    "Renewable Energy": {
+      "industries": ["Solar", "Wind", "Clean Utilities"],
+      "keywords": ["renewable", "solar", "wind power", "clean energy", "재생에너지", "태양광", "풍력"],
+      "tickers": {"US": ["NEE", "FSLR", "ENPH"], "KR": ["009830.KS"], "SG": ["U96.SI"]},
+      "industry_risks": ["rates", "regulation"]
+    },
+    "Fintech": {
+      "industries": ["Payments", "Digital Banking", "Crypto"],
+      "keywords": ["fintech", "payments", "digital bank", "crypto", "stablecoin", "핀테크", "간편결제"],
+      "tickers": {"US": ["V", "MA", "PYPL", "COIN"], "KR": ["323410.KS"], "SG": []},
+      "industry_risks": ["regulation", "rates"]
+    },
+    "Banking": {
+      "industries": ["Banks", "Dividend"],
+      "keywords": ["bank", "lender", "net interest", "은행", "금융지주"],
+      "tickers": {"US": ["JPM", "BAC"], "KR": ["105560.KS", "055550.KS"], "SG": ["D05.SI", "O39.SI", "U11.SI"]},
+      "industry_risks": ["rates", "regulation"]
+    }
+  },
+  "cycles": {
+    "_note": "Which themes each economic phase favors (from the design doc). / 경기 국면별 유리한 테마",
+    "Recovery":  ["Semiconductor", "Power Infrastructure", "EV", "Renewable Energy"],
+    "Expansion": ["AI Infrastructure", "Cloud", "Cyber Security", "Data Center", "Fintech"],
+    "Slowdown":  ["Healthcare", "Defense", "Nuclear", "Banking"],
+    "Recession": ["Healthcare", "Banking", "Nuclear"]
+  },
+  "risk": {
+    "country": ["China", "Russia", "Taiwan", "Hong Kong"],
+    "geopolitical": ["Taiwan", "Israel", "Ukraine", "Russia", "Iran", "Saudi Arabia"]
+  }
+}

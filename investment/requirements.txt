@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]
+apscheduler>=3.10,<4
+yfinance
+pandas
+requests
+lxml
+google-genai
