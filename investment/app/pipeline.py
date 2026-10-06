@@ -13,9 +13,10 @@ import traceback
 from pathlib import Path
 
 from . import financials, macro, news, scoring, themes as theme_mod
-from .db import connect, dumps, load_themes, loads, now, today
+from .db import connect, dumps, load_themes, load_universe, loads, now, today
+from .countries import COUNTRIES, market_of
 
-MARKETS = ("US", "KR", "SG")
+MARKETS = tuple(COUNTRIES)
 _lock = threading.Lock()
 STATUS = {"running": False, "step": None, "started": None, "last": None}
 
@@ -23,7 +24,7 @@ STATUS = {"running": False, "step": None, "started": None, "last": None}
 # ------------------------------------------------------------------ steps
 def run_news(con, markets=MARKETS) -> dict:
     cfg = load_themes()
-    c = news.collect(con, markets)
+    c = news.collect(con, tuple(m for m in markets if m in news.EDITIONS))
     a = theme_mod.analyze_pending(con, cfg["themes"])
     return {**c, **a}
 
@@ -44,8 +45,9 @@ def get_financials(con, tickers) -> dict:
     day, out, todo = today(), {}, []
     for t in tickers:
         row = con.execute("SELECT data FROM fin_cache WHERE ticker=? AND day=?", (t, day)).fetchone()
-        if row:
-            out[t] = loads(row["data"])
+        cached = loads(row["data"], {}) if row else {}
+        if cached and cached.get("schema_version") == "value-v1":
+            out[t] = cached
         else:
             todo.append(t)
     for t, m in financials.fetch_many(todo).items():
@@ -57,14 +59,6 @@ def get_financials(con, tickers) -> dict:
     return out
 
 
-def market_of(ticker: str) -> str:
-    if ticker.endswith((".KS", ".KQ")):
-        return "KR"
-    if ticker.endswith(".SI"):
-        return "SG"
-    return "US"
-
-
 def run_score(con, markets=MARKETS) -> dict:
     cfg = load_themes()
     th_cfg, cycles, risk_cfg = cfg["themes"], cfg["cycles"], cfg["risk"]
@@ -74,12 +68,15 @@ def run_score(con, markets=MARKETS) -> dict:
     mac = get_macro(con)
     cycle = mac.get("cycle", "Unknown")
 
-    # 3) industry mapping -> candidate stocks
-    stock_themes: dict[str, list] = {}
+    # Candidates are selected independently of news and theme membership.
+    universe = load_universe()
+    stock_themes = {tk: [] for market in markets
+                    for tk in universe["markets"].get(market, [])}
     for name, c in th_cfg.items():
-        for m in markets:
-            for tk in c["tickers"].get(m, []):
-                stock_themes.setdefault(tk, []).append(name)
+        for market in markets:
+            for tk in c["tickers"].get(market, []):
+                if tk in stock_themes:
+                    stock_themes[tk].append(name)
 
     # 4) financial statements + valuation
     fin = get_financials(con, list(stock_themes))
@@ -94,7 +91,8 @@ def run_score(con, markets=MARKETS) -> dict:
 
     day = today()
     con.execute("DELETE FROM theme_scores WHERE day=?", (day,))
-    con.execute("DELETE FROM stock_scores WHERE day=?", (day,))
+    for market in markets:
+        con.execute("DELETE FROM stock_scores WHERE day=? AND market=?", (day, market))
     for name in th_cfg:
         t = tm[name]
         row = {**{k: v for k, v in t.items()}, "flow_1m": flows[name],
@@ -106,17 +104,14 @@ def run_score(con, markets=MARKETS) -> dict:
     # 5) risk + 6) scoring
     scored = 0
     for tk, names in stock_themes.items():
-        m = fin.get(tk)
-        if not m:
-            continue
-        best = None
-        for name in names:  # a stock in several themes uses its best theme
-            s = scoring.score_stock(m, name, th_cfg[name], tm, max_count, flows[name],
-                                    cycle, cycles, risk_cfg)
-            if best is None or s["total"] > best["total"]:
-                best = {**s, "theme": name}
+        m = fin.get(tk) or {"ticker": tk, "fetch_error": True}
+        # User-supplied company assumptions override explicit illustrative defaults.
+        m = {**universe.get("valuation_assumptions", {}), **m}
+        best = scoring.value_score(m)
+        best["theme"] = names[0] if names else "Unclassified"
         best["all_themes"] = names
-        data = {"metrics": m, **best, "market": market_of(tk)}
+        data = {"metrics": m, **best, "market": market_of(tk),
+                "listing_country": market_of(tk), "domicile_country": m.get("country")}
         con.execute("INSERT INTO stock_scores(day,ticker,market,total,data) VALUES(?,?,?,?,?)",
                     (day, tk, market_of(tk), best["total"], dumps(data)))
         scored += 1
@@ -160,6 +155,13 @@ def latest_day(con):
     return r["d"] if r else None
 
 
+def current_score(data):
+    if data.get("score_version") == "value-v1":
+        return data
+    return {**data, "total": None, "parts": {}, "value_pick": False,
+            "analysis_status": "requires_rerun", "valuation": {"status": "requires_rerun"}}
+
+
 def stocks(con, day=None, market=None, limit=None) -> list:
     day = day or latest_day(con)
     if not day:
@@ -171,7 +173,7 @@ def stocks(con, day=None, market=None, limit=None) -> list:
     q += " ORDER BY total DESC"
     if limit:
         q += f" LIMIT {int(limit)}"
-    return [{"ticker": r["ticker"], **loads(r["data"], {})} for r in con.execute(q, args)]
+    return [{"ticker": r["ticker"], **current_score(loads(r["data"], {}))} for r in con.execute(q, args)]
 
 
 def theme_table(con, day=None) -> list:
@@ -181,19 +183,41 @@ def theme_table(con, day=None) -> list:
     return sorted(rows, key=lambda x: x.get("score", 0), reverse=True)
 
 
-def report(con) -> dict:
+def country_table(con, rows=None):
+    rows = stocks(con) if rows is None else rows
+    universe = load_universe()
+    result = {}
+    for code, meta in COUNTRIES.items():
+        subset = [s for s in rows if s.get("market") == code and s.get("score_version") == "value-v1"]
+        analyzed = len(subset)
+        result[code] = {**meta, "configured": len(universe["markets"].get(code, [])),
+            "analyzed": analyzed,
+            "valuation_available": sum(s.get("valuation", {}).get("status") == "estimated" for s in subset),
+            "candidates": sum(bool(s.get("value_pick")) for s in subset),
+            "data_status": "미수집" if not analyzed else "보조 데이터·공식 검증 전",
+            "official_source_connected": False}
+    return result
+
+
+def report(con, market=None) -> dict:
     day = latest_day(con)
     all_stocks = stocks(con, day)
+    country_stats = country_table(con, all_stocks)
+    if market:
+        all_stocks = [s for s in all_stocks if s["market"] == market]
     mac = loads((con.execute("SELECT data FROM macro ORDER BY day DESC LIMIT 1").fetchone() or {"data": None})["data"], {})
     last_run = con.execute("SELECT * FROM runs ORDER BY id DESC LIMIT 1").fetchone()
     n_news = con.execute("SELECT COUNT(*) c FROM articles").fetchone()["c"]
-    top = [s for s in all_stocks if not s.get("avoid")]
+    top = [s for s in all_stocks if s.get("score_version") == "value-v1"
+           and s.get("analysis_status") == "analyzable" and s.get("total") is not None]
     by_market = {m: [s for s in top if s["market"] == m][:5] for m in MARKETS}
     return {
         "day": day, "generated": now().isoformat(timespec="minutes"),
         "macro": mac, "themes": theme_table(con, day),
+        "countries": country_stats, "selected_market": market,
+        "review_list": [s for s in all_stocks if s not in top],
         "top_stocks": top[:10], "top_by_market": by_market,
-        "value_picks": [s for s in all_stocks if s.get("value_pick") and not s.get("avoid")][:10],
+        "value_picks": [s for s in top if s.get("value_pick")][:10],
         "avoid_list": [s for s in all_stocks if s.get("avoid")],
         "news_total": n_news,
         "last_run": dict(last_run) if last_run else None,

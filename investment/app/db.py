@@ -73,3 +73,8 @@ def loads(s, default=None):
 def load_themes() -> dict:
     p = Path(os.environ.get("INVEST_THEMES", ROOT / "themes.json"))
     return json.loads(p.read_text(encoding="utf-8"))
+
+
+def load_universe() -> dict:
+    p = Path(os.environ.get("INVEST_UNIVERSE", ROOT / "universe.json"))
+    return json.loads(p.read_text(encoding="utf-8"))

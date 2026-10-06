@@ -1,14 +1,15 @@
 """Dashboard HTML (no template engine). / 대시보드 화면."""
 import html
+from .countries import COUNTRIES
 
 E = lambda x: html.escape("" if x is None else str(x))  # noqa: E731
 
-PARTS = [("financial", "Financial 재무", 30), ("growth", "Growth 성장", 20),
-         ("valuation", "Value 가치", 20), ("theme", "Theme 테마", 15),
-         ("macro", "Macro 거시", 10), ("risk", "Risk 리스크", 5)]
+PARTS = [("valuation", "가치평가", 35), ("quality", "사업의 질", 25),
+         ("financial", "재무", 20), ("allocation", "자본배분", 10),
+         ("growth", "성장", 10)]
 CYCLE_KO = {"Expansion": "확장기", "Recovery": "회복기", "Slowdown": "둔화기",
             "Recession": "침체기", "Unknown": "판단 불가"}
-FLAG = {"US": "🇺🇸", "KR": "🇰🇷", "SG": "🇸🇬"}
+FLAG = {"US": "🇺🇸", "KR": "🇰🇷", "SG": "🇸🇬", "JP": "🇯🇵", "TW": "🇹🇼", "HK": "🇭🇰"}
 
 
 def f(x, suffix="", d=1):
@@ -32,6 +33,10 @@ def stock_rows(items, show_reasons=False):
         p = s.get("parts", {})
         parts = "".join(f'<td class="c">{bar(p.get(k, 0), mx)}<small>{p.get(k, 0):g}</small></td>'
                         for k, _, mx in PARTS)
+        val = s.get("valuation", {})
+        scenarios = " · ".join(f"{E(name)}: {f(v.get('value'), ' ' + (m.get('currency') or ''), 2)} (안전마진 {f(v.get('safety_margin'), '%')})"
+                               for name, v in val.get("scenarios", {}).items()) or "가치평가 보류"
+        assumptions = ", ".join(f"{E(k)}={E(v)}" for k, v in val.get("assumptions", {}).items())
         flags = ", ".join(s.get("risk_flags", [])) or "–"
         detail = f"""<details><summary><b>{E(s['ticker'])}</b> {E(m.get('name'))}</summary>
 <div class="det">Sector: {E(m.get('sector'))} / {E(m.get('industry'))} · {E(m.get('country'))}<br>
@@ -40,6 +45,10 @@ ROE {f(m.get('roe'), '%')} · ROIC {f(m.get('roic'), '%')} · Debt ratio {f(m.ge
 FCF yield {f(m.get('fcf_yield'), '%')} · PER {f(m.get('per'))} · PBR {f(m.get('pbr'))} · PSR {f(m.get('psr'))} · EV/EBITDA {f(m.get('ev_ebitda'))}<br>
 DCF value {f(m.get('dcf_value'), ' ' + (m.get('currency') or ''), 2)} (upside {f(m.get('dcf_upside'), '%')}) · Price {f(m.get('price'), '', 2)} · 1M {f(m.get('mom_1m'), '%')}<br>
 Themes: {E(', '.join(s.get('all_themes', [])))} · Data coverage {f((s.get('coverage') or 0) * 100, '%', 0)}<br>
+분석 상태: {E(s.get('analysis_status', 'legacy_score_requires_rerun'))} · 자료: {E(s.get('data_quality', 'unverified'))}<br>
+가치 시나리오: {scenarios}<br>가정: {E(val.get('assumption_source'))} · {assumptions}<br>
+정상화: {E(m.get('normalization_method'))} · {E(m.get('normalization_note'))}<br>
+수집 시각: {E(m.get('collected_at'))} · 기간 말: {E(m.get('period_end'))}<br>
 Risk flags: {E(flags)}</div></details>"""
         reasons = f'<td>{E(", ".join(s.get("avoid", [])))}</td>' if show_reasons else ""
         out.append(f"""<tr><td>{FLAG.get(s.get('market'), '')}</td><td class="name">{detail}</td>
@@ -60,6 +69,16 @@ def stock_table(items, empty, show_reasons=False):
 
 
 def render(r: dict, static: bool = False) -> str:
+    selected = r.get("selected_market")
+    countries = r.get("countries", {})
+    links = '<a href="?">전체</a> ' + " ".join(
+        f'<a href="?market={code}" aria-current="{ "page" if selected == code else "false"}">{FLAG[code]} {E(meta["name"])}</a>'
+        for code, meta in COUNTRIES.items())
+    summary = "".join(f'<tr><td>{E(meta["name"])}</td><td>{meta.get("configured", 0)}</td>'
+                      f'<td>{meta.get("analyzed", 0)}</td><td>{meta.get("valuation_available", 0)}</td>'
+                      f'<td>{meta.get("candidates", 0)}</td><td>{E(meta.get("data_status", "미수집"))}</td></tr>'
+                      for code, meta in countries.items() if not selected or code == selected)
+    country_section = f'<h2>국가별 가치투자</h2><nav>{links}</nav><div class="scroll"><table><tr><th>국가</th><th>설정 종목</th><th>분석 기록</th><th>가치평가 가능</th><th>안전마진 후보</th><th>데이터 상태</th></tr>{summary}</table></div><p class="na">명시적 후보 목록 기준 · 공식 공시 검증 전 · 할인율은 초기 가정 · 미수집 자료는 순위에 포함하지 않습니다.</p>'
     mac = r.get("macro") or {}
     cycle = mac.get("cycle", "Unknown")
     favored = [t["theme"] for t in r.get("themes", []) if t.get("favored_by_cycle")]
@@ -125,7 +144,8 @@ button:disabled{{opacity:.5}} footer{{color:var(--mut);font-size:12px;margin:30p
 last run: {E(lr.get('status'))} {E((lr.get('finished') or lr.get('started') or '')[:16])}</span></div>
 <div>{run_btn}</div></div>
 
-<h2>Economic cycle · 경기 사이클</h2>
+{country_section}
+<h2>미국 거시 참고 정보 · Economic cycle</h2>
 <span class="cycle">{E(cycle)} · {CYCLE_KO.get(cycle, '')}</span>
 <span class="na"> Favored themes 유리한 테마: {E(', '.join(favored) or '–')}</span>
 <div class="cards">{cards}</div>
@@ -135,20 +155,22 @@ last run: {E(lr.get('status'))} {E((lr.get('finished') or lr.get('started') or '
 <th class="c">Positive</th><th class="c">Flow 1M</th><th>Latest headlines 최근 뉴스</th></tr>{theme_rows}</table></div>
 
 <h2>Top Stocks · 상위 종목 <small class="na">(click a name for details · 이름 클릭 시 상세)</small></h2>
-{stock_table(r.get('top_stocks', []), 'No data yet. Press Run now. / 아직 데이터 없음')}
+{stock_table(r.get('top_stocks', []), '가치평가 가능한 종목 없음 · 추가 검토·자료 부족 목록을 확인하세요.')}
 
 <h2>Top 5 by market · 시장별 상위 5</h2><div class="mks">{by_mkt}</div>
 
-<h2>Value Picks · 가치주 <small class="na">(PER ≤ 18, ROE ≥ 15%, FCF yield ≥ 4%)</small></h2>
-{stock_table(r.get('value_picks', []), 'No stock meets all three rules today. / 조건을 모두 충족한 종목 없음')}
+<h2>Value Picks · 가치주 <small class="na">(기준 안전마진 ≥ 20% · 초기 검토 기준)</small></h2>
+{stock_table(r.get('value_picks', []), '안전마진 기준을 충족한 평가 가능 종목 없음')}
 
 <h2>Avoid List · 회피 목록 <small class="na">(high debt, losses, weak cash flow, high risk)</small></h2>
 <details><summary>{len(r.get('avoid_list', []))} stocks — click to show / 클릭해서 보기</summary>
 {stock_table(r.get('avoid_list', []), 'None. / 없음', show_reasons=True)}</details>
 
-<footer>Score 점수 = Financial 30 (ROE, ROIC, debt ratio, FCF yield) + Growth 20 (revenue, EPS) +
-Valuation 20 (PER, PBR, EV/EBITDA) + Theme 15 + Macro 10 + Risk 5.<br>
-Data: Yahoo Finance, Google News, FRED. AI: Gemini. Missing data gets half points in that category.<br>
+<h2>추가 검토·자료 부족</h2>
+{stock_table(r.get('review_list', []), '보류 종목 없음', show_reasons=True)}
+<footer>점수 = 가치평가 35 + 사업의 질 25 + 재무 20 + 자본배분 10 + 성장 10.<br>
+자료가 없는 항목은 0점이며, 핵심 가치평가 자료 부족 시 총점을 부여하지 않습니다. 뉴스·거시는 투자 점수에 포함하지 않습니다.<br>
+Data: Yahoo Finance (보조 데이터), Google News, FRED (미국). 공식 공시 수집·역사 시점 백테스트는 아직 연결 전입니다.<br>
 AI does not make investment decisions. This is a list of companies worth reviewing — the final decision is yours.<br>
 AI가 투자 결정을 대신하지 않습니다. 검토할 가치가 있는 기업 리스트이며, 최종 판단은 투자자가 합니다.</footer>
 </main>{script}</body></html>"""
