@@ -86,9 +86,9 @@ def render(r: dict, static: bool = False) -> str:
         for code, meta in COUNTRIES.items())
     summary = "".join(f'<tr><td>{E(meta["name"])}</td><td>{meta.get("configured", 0)}</td>'
                       f'<td>{meta.get("analyzed", 0)}</td><td>{meta.get("valuation_available", 0)}</td>'
-                      f'<td>{meta.get("candidates", 0)}</td><td>{E(meta.get("data_status", "미수집"))} · 분석일 {E(meta.get("analysis_day") or "–")}<br>공시: {E(SOURCE_STATUS.get(meta.get("official_source_status"), "미수집"))} · 원본 {meta.get("official_snapshots", 0)}건 · 항목 일치 {meta.get("matched_fields", 0)}개 기업</td></tr>'
+                      f'<td>{meta.get("candidates", 0)}</td><td>{E(meta.get("data_status", "미수집"))} · 분석일 {E(meta.get("analysis_day") or "–")}<br>공시: {E(SOURCE_STATUS.get(meta.get("official_source_status"), "미수집"))} · 원본 {meta.get("official_snapshots", 0)}건 · 재무 항목 {meta.get("official_facts", 0)}개 · 항목 일치 {meta.get("matched_fields", 0)}개 기업</td></tr>'
                       for code, meta in countries.items() if not selected or code == selected)
-    country_section = f'<h2>국가별 가치투자</h2><nav>{links}</nav><div class="scroll"><table><tr><th>국가</th><th>설정 종목</th><th>분석 기록</th><th>가치평가 가능</th><th>안전마진 후보</th><th>데이터 상태</th></tr>{summary}</table></div><p class="na">명시적 후보 목록 기준 · 공식 공시 검증 전 · 할인율은 초기 가정 · 미수집 자료는 순위에 포함하지 않습니다.</p>'
+    country_section = f'<h2>국가별 가치투자</h2><nav>{links}</nav><div class="scroll"><table><tr><th>국가</th><th>설정 종목</th><th>분석 기록</th><th>가치평가 가능</th><th>안전마진 후보</th><th>데이터 상태</th></tr>{summary}</table></div><p class="na">명시적 후보 목록 기준 · 공시 수집과 가치평가 대조는 별도 단계 · 할인율은 초기 가정 · 미수집 자료는 순위에 포함하지 않습니다.</p>'
     mac = r.get("macro") or {}
     cycle = mac.get("cycle", "Unknown")
     favored = [t["theme"] for t in r.get("themes", []) if t.get("favored_by_cycle")]

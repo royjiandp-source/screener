@@ -204,3 +204,18 @@ def test_cash_with_investments_is_not_compared_to_cash_only(filing_db):
     m = {"cash": 120, "cash_semantics": "cash_and_investments", "financial_currency": "USD",
          "statement_scope": "consolidated", "field_periods": {"cash": "2025-12-31"}}
     assert verify_metrics(filing_db, "AAPL", m)["status"] == "not_comparable"
+
+
+def test_country_shows_collected_filings_without_valuation(filing_db):
+    from app.filings.store import save_snapshot
+    from app.filings.sec import parse_facts
+    from app.pipeline import country_table, report
+    from app.web import render
+    data = sec_data()
+    save_snapshot(filing_db, '005930.KS', 'KR', 'DART', data, parse_facts(data))
+    country = country_table(filing_db, [])['KR']
+    assert country['data_status'] == '공시 수집됨 · 가치평가 미실행'
+    assert country['official_facts'] == 2
+    page = render(report(filing_db, market='KR'))
+    assert '재무 항목 2개' in page
+    assert '공식 공시 검증 전' not in page

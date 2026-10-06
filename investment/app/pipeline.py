@@ -201,16 +201,19 @@ def country_table(con, rows=None):
     for code, meta in COUNTRIES.items():
         subset = [s for s in rows if s.get("market") == code and s.get("score_version") == "value-v1"]
         analyzed = len(subset)
+        snapshots = con.execute("SELECT COUNT(*) FROM filing_snapshots WHERE market=?", (code,)).fetchone()[0]
+        facts_count = con.execute("SELECT COUNT(*) FROM filing_facts f JOIN filing_snapshots s ON s.id=f.snapshot_id WHERE s.market=?", (code,)).fetchone()[0]
         result[code] = {**meta, "configured": len(universe["markets"].get(code, [])),
             "analyzed": analyzed,
             "analysis_day": max((s.get("day", "") for s in subset), default=None),
             "valuation_available": sum(s.get("valuation", {}).get("status") == "estimated" for s in subset),
             "candidates": sum(bool(s.get("value_pick")) for s in subset),
-            "data_status": "미수집" if not analyzed else "보조 데이터·공식 검증 전",
+            "data_status": ("공시 수집됨 · 가치평가 미실행" if snapshots else "공시·가치평가 미수집") if not analyzed else "가치평가 기록 있음 · 대조 상태는 종목별 확인",
             "official_source_status": official_statuses.get(code, {}).get("status", "not_collected"),
             "official_source_connected": bool(con.execute(
                 "SELECT 1 FROM filing_snapshots WHERE market=? LIMIT 1", (code,)).fetchone()),
-            "official_snapshots": con.execute("SELECT COUNT(*) FROM filing_snapshots WHERE market=?", (code,)).fetchone()[0],
+            "official_snapshots": snapshots,
+            "official_facts": facts_count,
             "matched_fields": sum(s.get("metrics", {}).get("official_verification", {}).get("status") == "matched_fields" for s in subset)}
     return result
 
