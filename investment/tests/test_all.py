@@ -77,8 +77,10 @@ def test_pipeline_and_api(env):
     assert r.status_code == 200 and "Top Themes" in r.text and "Avoid List" in r.text
     rep = c.get("/api/report").json()
     assert rep["themes"][0]["score"] >= rep["themes"][-1]["score"]
-    assert len(rep["top_stocks"]) == 10
-    assert all(0 <= s["total"] <= 100 for s in rep["top_stocks"])
+    # Legacy financial fixture has no normalized FCFF/shares: no fabricated ranking.
+    assert rep["top_stocks"] == []
+    assert len(rep["review_list"]) > 30
+    assert all(s["total"] is None for s in rep["review_list"])
     assert c.get("/api/stocks?market=KR").json()[0]["market"] == "KR"
     assert c.get("/api/stocks/NVDA").json()["ticker"] == "NVDA"
     assert c.get("/api/stocks/ZZZZ").status_code == 404
@@ -124,7 +126,8 @@ def test_financials_fetch_math(monkeypatch):
     assert m["fcf_yield"] == 2.0                          # 20 / 1000
     assert m["debt_ratio"] == round(80 / 70 * 100, 2)
     assert m["current_ratio"] == 2.0 and m["mom_1m"] == 10.0
-    assert m["dcf_value"] and m["dcf_value"] > 0
+    assert m["dcf_value"] is None  # raw CFO-capex must not be passed off as FCFF
+    assert m["normalized_fcf"] is None  # fewer than three complete FCFF periods
 
 
 def test_gemini_path(env, monkeypatch):

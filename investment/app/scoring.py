@@ -130,3 +130,65 @@ def score_stock(m, theme, theme_cfg, tm_all, max_count, flow, cycle, cycles, ris
         "risk": rk["label"], "risk_flags": rk["flags"],
         "avoid": is_avoid(m, rk), "value_pick": is_value_pick(m),
     }
+
+
+def value_score(m):
+    """Value-first score. Missing inputs earn zero; critical gaps have no total."""
+    from .valuation import evaluate, finite
+    val = evaluate(m)
+    sector, industry = (m.get("sector") or "").lower(), (m.get("industry") or "").lower()
+    special = sector == "financial services" or any(x in industry for x in ("reit", "bank", "insurance"))
+    state = "special_model_required" if special else "analyzable"
+    if not special and val["status"] != "estimated":
+        state = "data_insufficient"
+    if special:
+        val = {**val, "status": "special_model_required", "scenarios": {}, "sensitivity": []}
+    flags = []
+    if m.get("share_basis_verified") is False:
+        flags.append("ADR·복수 상장 주식 수 기준 검토 필요")
+        val = {**val, "status": "share_basis_unverified", "scenarios": {}, "sensitivity": []}
+        if not special:
+            state = "review_required"
+    if m.get("equity_nonpositive"):
+        flags.append("자기자본 0 이하")
+    for key, label in (("accounting_issue", "회계 검토 필요"), ("liquidity_issue", "유동성 검토 필요")):
+        if m.get(key):
+            flags.append(label)
+    if flags and state == "analyzable":
+        state = "review_required"
+
+    inputs = []
+
+    def part(items, weight):
+        inputs.extend(v is not None for v in items)
+        return round(weight * sum(v or 0 for v in items) / len(items), 2)
+
+    def number(key, bad, good):
+        return lin(m[key], bad, good) if finite(m.get(key)) else None
+
+    margin = val.get("scenarios", {}).get("base", {}).get("safety_margin")
+    parts = {
+        "valuation": part([lin(margin, 0, 40)], 35),
+        "quality": part([
+            lin(m["roic"] - m["discount_rate"], 0, 10)
+            if finite(m.get("roic")) and finite(m.get("discount_rate")) and m.get("cashflow_type") == "FCFF" else None,
+            number("op_margin", 0, 25)], 25),
+        "financial": part([number("debt_ratio", 300, 50),
+                            1 if finite(m.get("ocf")) and m["ocf"] > 0 else 0 if finite(m.get("ocf")) else None,
+                            1 if finite(m.get("fcf")) and m["fcf"] > 0 else 0 if finite(m.get("fcf")) else None], 20),
+        "allocation": part([number("capital_allocation_score", 0, 100)
+                            if m.get("capital_allocation_source") else None], 10),
+        "growth": part([number("revenue_growth", 0, 10), number("eps_growth", 0, 10)], 10),
+    }
+    if finite(m.get("fcf")) and m["fcf"] < 0:
+        flags.append("음의 FCF")
+        if state == "analyzable":
+            state = "review_required"
+    total = round(sum(parts.values()), 1) if val["status"] == "estimated" and not special else None
+    return {"total": total, "parts": parts, "coverage": round(sum(inputs) / len(inputs), 2),
+            "analysis_status": state, "data_quality": m.get("data_quality", "unverified"),
+            "valuation": val, "risk": "Review" if flags else "Unverified",
+            "risk_flags": flags, "avoid": flags,
+            "value_pick": state == "analyzable" and margin is not None and margin >= 20,
+            "score_version": "value-v1",
+            "score_note": "초기 비금융 기업 비교 기준; 업종별 보정과 공식 공시 검증 필요"}

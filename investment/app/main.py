@@ -14,6 +14,8 @@ from . import pipeline
 from .db import TZ, connect, loads
 from .web import render
 
+MARKET_PATTERN = "^(KR|US|JP|TW|HK|SG)$"
+
 scheduler = None
 
 
@@ -41,10 +43,10 @@ app = FastAPI(title="AI Investment Idea Discovery", version="1.0", lifespan=life
 
 
 @app.get("/", response_class=HTMLResponse)
-def dashboard():
+def dashboard(market: str | None = Query(None, pattern=MARKET_PATTERN)):
     con = connect()
     try:
-        return render(pipeline.report(con))
+        return render(pipeline.report(con, market=market))
     finally:
         con.close()
 
@@ -55,10 +57,10 @@ def health():
 
 
 @app.get("/api/report")
-def api_report():
+def api_report(market: str | None = Query(None, pattern=MARKET_PATTERN)):
     con = connect()
     try:
-        return pipeline.report(con)
+        return pipeline.report(con, market=market)
     finally:
         con.close()
 
@@ -73,10 +75,19 @@ def api_themes():
 
 
 @app.get("/api/stocks")
-def api_stocks(market: str | None = None, limit: int = Query(50, le=500)):
+def api_stocks(market: str | None = Query(None, pattern=MARKET_PATTERN), limit: int = Query(50, ge=1, le=500)):
     con = connect()
     try:
         return pipeline.stocks(con, market=market, limit=limit)
+    finally:
+        con.close()
+
+
+@app.get("/api/countries")
+def api_countries():
+    con = connect()
+    try:
+        return pipeline.country_table(con)
     finally:
         con.close()
 
@@ -89,7 +100,7 @@ def api_stock(ticker: str):
                           (ticker.upper(),)).fetchone()
         if not row:
             raise HTTPException(404, "Ticker not scored yet")
-        return {"ticker": ticker.upper(), "day": row["day"], **loads(row["data"], {})}
+        return {"ticker": ticker.upper(), "day": row["day"], **pipeline.current_score(loads(row["data"], {}))}
     finally:
         con.close()
 
