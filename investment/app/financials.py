@@ -66,6 +66,16 @@ def _last(vals):
     return vals[-1] if vals else None
 
 
+def _field_period(frame, *names):
+    for name in names:
+        if name in frame.index:
+            for date in sorted(frame.columns, reverse=True):
+                if _num(frame.loc[name, date]) is not None:
+                    return date.strftime("%Y-%m-%d")
+            return None
+    return None
+
+
 def _cagr(vals):
     """Compound annual growth (%) over the available years."""
     if len(vals) < 2 or vals[0] is None or vals[-1] is None or vals[0] <= 0 or vals[-1] <= 0:
@@ -172,12 +182,20 @@ def fetch(ticker: str) -> dict:
     history = annual_fcff(inc, cf)
     normalized = statistics.median(p["fcff"] for p in history) if len(history) >= 3 else None
     return {
-        "schema_version": "value-v1",
+        "schema_version": "value-v2",
         "ticker": ticker,
         "name": info.get("shortName") or info.get("longName") or ticker,
         "country": info.get("country"), "sector": info.get("sector"),
         "industry": info.get("industry"), "currency": price_cur,
         "financial_currency": fin_cur, "fx_rate": fx,
+        "statement_scope": "unspecified",
+        "cash_semantics": "cash" if "Cash And Cash Equivalents" in bs.index else "cash_and_investments",
+        "equity": equity, "liabilities": liab, "assets": _last(_row(bs, "Total Assets")),
+        "field_periods": {
+            "cash": _field_period(bs, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"),
+            "equity": _field_period(bs, "Stockholders Equity", "Common Stock Equity"),
+            "liabilities": _field_period(bs, "Total Liabilities Net Minority Interest"),
+            "assets": _field_period(bs, "Total Assets")},
         "shares": _num(info.get("sharesOutstanding")),
         "share_basis_verified": not ("." not in ticker and info.get("country") not in (None, "United States")),
         "equity_nonpositive": equity is not None and equity <= 0,

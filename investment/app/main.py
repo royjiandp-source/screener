@@ -5,6 +5,7 @@ Open: http://localhost:8000
 """
 import os
 import threading
+from datetime import datetime
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
@@ -13,6 +14,8 @@ from fastapi.responses import HTMLResponse
 from . import pipeline
 from .db import TZ, connect, loads
 from .web import render
+from .filings.store import history
+from .filings.service import source_status
 
 MARKET_PATTERN = "^(KR|US|JP|TW|HK|SG)$"
 
@@ -136,7 +139,7 @@ def api_news(theme: str | None = None, limit: int = Query(50, le=500)):
 
 
 @app.post("/api/run")
-def api_run(step: str = Query("all", pattern="^(news|score|all)$")):
+def api_run(step: str = Query("all", pattern="^(news|official|score|all)$")):
     if pipeline.STATUS["running"]:
         return {"started": False, "reason": "already running", **pipeline.STATUS}
     threading.Thread(target=pipeline.run, args=(step,), daemon=True).start()
@@ -146,3 +149,23 @@ def api_run(step: str = Query("all", pattern="^(news|score|all)$")):
 @app.get("/api/status")
 def api_status():
     return pipeline.STATUS
+
+
+@app.get("/api/filings/{ticker}")
+def api_filings(ticker: str, as_of: datetime | None = None):
+    if as_of and as_of.tzinfo is None:
+        raise HTTPException(422, "as_of requires a timezone")
+    con = connect()
+    try:
+        return history(con, ticker.upper(), as_of.isoformat() if as_of else None)
+    finally:
+        con.close()
+
+
+@app.get("/api/sources")
+def api_sources():
+    con = connect()
+    try:
+        return source_status(con)
+    finally:
+        con.close()

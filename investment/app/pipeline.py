@@ -15,6 +15,8 @@ from pathlib import Path
 from . import financials, macro, news, scoring, themes as theme_mod
 from .db import connect, dumps, load_themes, load_universe, loads, now, today
 from .countries import COUNTRIES, market_of
+from .filings import service as official
+from .filings.store import verify_metrics
 
 MARKETS = tuple(COUNTRIES)
 _lock = threading.Lock()
@@ -46,7 +48,7 @@ def get_financials(con, tickers) -> dict:
     for t in tickers:
         row = con.execute("SELECT data FROM fin_cache WHERE ticker=? AND day=?", (t, day)).fetchone()
         cached = loads(row["data"], {}) if row else {}
-        if cached and cached.get("schema_version") == "value-v1":
+        if cached and cached.get("schema_version") == "value-v2":
             out[t] = cached
         else:
             todo.append(t)
@@ -106,7 +108,12 @@ def run_score(con, markets=MARKETS) -> dict:
     for tk, names in stock_themes.items():
         m = fin.get(tk) or {"ticker": tk, "fetch_error": True}
         # User-supplied company assumptions override explicit illustrative defaults.
-        m = {**universe.get("valuation_assumptions", {}), **m}
+        m = {**universe.get("valuation_assumptions", {}), **m,
+             **universe.get("company_assumptions", {}).get(tk, {})}
+        verification = verify_metrics(con, tk, m)
+        m["official_verification"] = verification
+        if verification["status"] == "conflict":
+            m["accounting_issue"] = True
         best = scoring.value_score(m)
         best["theme"] = names[0] if names else "Unclassified"
         best["all_themes"] = names
@@ -133,6 +140,8 @@ def run(step: str = "all", markets=MARKETS) -> dict:
         out = {}
         if step in ("news", "all"):
             out["news"] = run_news(con, markets)
+        if step in ("official", "all"):
+            out["official"] = official.collect(con, markets)
         if step in ("score", "all"):
             out["score"] = run_score(con, markets)
         status, msg = "ok", dumps(out)
@@ -163,17 +172,18 @@ def current_score(data):
 
 
 def stocks(con, day=None, market=None, limit=None) -> list:
-    day = day or latest_day(con)
-    if not day:
-        return []
-    q, args = "SELECT ticker,data FROM stock_scores WHERE day=?", [day]
+    if day:
+        q, args = "SELECT ticker,day,data FROM stock_scores WHERE day=?", [day]
+    else:
+        q, args = ("SELECT ticker,day,data FROM stock_scores s WHERE day="
+                   "(SELECT MAX(day) FROM stock_scores newest WHERE newest.market=s.market)"), []
     if market:
         q += " AND market=?"
         args.append(market.upper())
     q += " ORDER BY total DESC"
     if limit:
         q += f" LIMIT {int(limit)}"
-    return [{"ticker": r["ticker"], **current_score(loads(r["data"], {}))} for r in con.execute(q, args)]
+    return [{**current_score(loads(r["data"], {})), "ticker": r["ticker"], "day": r["day"]} for r in con.execute(q, args)]
 
 
 def theme_table(con, day=None) -> list:
@@ -187,21 +197,27 @@ def country_table(con, rows=None):
     rows = stocks(con) if rows is None else rows
     universe = load_universe()
     result = {}
+    official_statuses = official.source_status(con)
     for code, meta in COUNTRIES.items():
         subset = [s for s in rows if s.get("market") == code and s.get("score_version") == "value-v1"]
         analyzed = len(subset)
         result[code] = {**meta, "configured": len(universe["markets"].get(code, [])),
             "analyzed": analyzed,
+            "analysis_day": max((s.get("day", "") for s in subset), default=None),
             "valuation_available": sum(s.get("valuation", {}).get("status") == "estimated" for s in subset),
             "candidates": sum(bool(s.get("value_pick")) for s in subset),
             "data_status": "미수집" if not analyzed else "보조 데이터·공식 검증 전",
-            "official_source_connected": False}
+            "official_source_status": official_statuses.get(code, {}).get("status", "not_collected"),
+            "official_source_connected": bool(con.execute(
+                "SELECT 1 FROM filing_snapshots WHERE market=? LIMIT 1", (code,)).fetchone()),
+            "official_snapshots": con.execute("SELECT COUNT(*) FROM filing_snapshots WHERE market=?", (code,)).fetchone()[0],
+            "matched_fields": sum(s.get("metrics", {}).get("official_verification", {}).get("status") == "matched_fields" for s in subset)}
     return result
 
 
 def report(con, market=None) -> dict:
     day = latest_day(con)
-    all_stocks = stocks(con, day)
+    all_stocks = stocks(con)
     country_stats = country_table(con, all_stocks)
     if market:
         all_stocks = [s for s in all_stocks if s["market"] == market]
@@ -226,7 +242,7 @@ def report(con, market=None) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", nargs="?", default="all", choices=["news", "score", "all", "none"])
+    ap.add_argument("step", nargs="?", default="all", choices=["news", "official", "score", "all", "none"])
     ap.add_argument("--markets", nargs="+", default=list(MARKETS))
     ap.add_argument("--export", help="write the dashboard as a static HTML file")
     a = ap.parse_args()

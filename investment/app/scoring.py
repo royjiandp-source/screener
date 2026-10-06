@@ -142,11 +142,11 @@ def value_score(m):
     if not special and val["status"] != "estimated":
         state = "data_insufficient"
     if special:
-        val = {**val, "status": "special_model_required", "scenarios": {}, "sensitivity": []}
+        val = {**val, "status": "special_model_required", "scenarios": {}, "sensitivity": [], "reverse_dcf": None}
     flags = []
     if m.get("share_basis_verified") is False:
         flags.append("ADR·복수 상장 주식 수 기준 검토 필요")
-        val = {**val, "status": "share_basis_unverified", "scenarios": {}, "sensitivity": []}
+        val = {**val, "status": "share_basis_unverified", "scenarios": {}, "sensitivity": [], "reverse_dcf": None}
         if not special:
             state = "review_required"
     if m.get("equity_nonpositive"):

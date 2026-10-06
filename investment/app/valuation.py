@@ -38,6 +38,29 @@ def safety_margin(price, value):
     return (1 - price / value) * 100
 
 
+def reverse_dcf(fcf, shares, price, discount=10, terminal=2, years=5,
+                cashflow_type="FCFF", net_debt=0):
+    """Price and cash flows must use the same currency; hold other inputs fixed."""
+    if not finite(price) or price <= 0:
+        raise ValueError("Price must be positive and finite")
+    low, high = -50.0, 50.0
+
+    def value(g):
+        return dcf(fcf, shares, g, discount, terminal, years, cashflow_type, net_debt)
+
+    bounds = {"min_growth": low, "max_growth": high, "years": years}
+    if not value(low) <= price <= value(high):
+        return {"status": "outside_search_range", **bounds, "implied_growth": None}
+    for _ in range(80):
+        mid = (low + high) / 2
+        if value(mid) < price:
+            low = mid
+        else:
+            high = mid
+    return {"status": "estimated", **bounds, "implied_growth": (low + high) / 2,
+            "note": "다른 가정을 고정한 첫 5년 현금흐름 성장률. 실현 가능성이나 매출 성장 예측이 아님"}
+
+
 def evaluate(metrics):
     required = ("normalized_fcf", "shares", "discount_rate", "terminal_growth", "price")
     missing = [key for key in required if not finite(metrics.get(key))]
@@ -88,4 +111,7 @@ def evaluate(metrics):
                 "sensitivity": [], "error": str(exc)}
     return {**base, "status": "estimated", "assumptions": {
         "normalized_fcf": metrics["normalized_fcf"], "shares": metrics["shares"],
-        "net_debt": net_debt, "fx_rate": fx, "years": 5}}
+        "net_debt": net_debt, "fx_rate": fx, "years": 5},
+        "reverse_dcf": reverse_dcf(metrics["normalized_fcf"], metrics["shares"],
+            metrics["price"] / fx, discount=discount, terminal=terminal,
+            cashflow_type=kind, net_debt=net_debt)}

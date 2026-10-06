@@ -10,6 +10,9 @@ PARTS = [("valuation", "가치평가", 35), ("quality", "사업의 질", 25),
 CYCLE_KO = {"Expansion": "확장기", "Recovery": "회복기", "Slowdown": "둔화기",
             "Recession": "침체기", "Unknown": "판단 불가"}
 FLAG = {"US": "🇺🇸", "KR": "🇰🇷", "SG": "🇸🇬", "JP": "🇯🇵", "TW": "🇹🇼", "HK": "🇭🇰"}
+SOURCE_STATUS = {"not_configured": "설정 필요", "not_collected": "미수집",
+                 "not_supported": "연결 미구현", "captured": "수집 완료",
+                 "partial": "일부 수집", "empty": "수집 자료 없음", "source_error": "수집 오류"}
 
 
 def f(x, suffix="", d=1):
@@ -37,6 +40,10 @@ def stock_rows(items, show_reasons=False):
         scenarios = " · ".join(f"{E(name)}: {f(v.get('value'), ' ' + (m.get('currency') or ''), 2)} (안전마진 {f(v.get('safety_margin'), '%')})"
                                for name, v in val.get("scenarios", {}).items()) or "가치평가 보류"
         assumptions = ", ".join(f"{E(k)}={E(v)}" for k, v in val.get("assumptions", {}).items())
+        verification = m.get("official_verification", {})
+        reverse = val.get("reverse_dcf") or {}
+        comparisons = " · ".join(f'{E(c["metric"])}: {E(c["status"])} <a href="{E(c["source_url"])}" target="_blank" rel="noopener">공시 원본</a>'
+                                 for c in verification.get("comparisons", []))
         flags = ", ".join(s.get("risk_flags", [])) or "–"
         detail = f"""<details><summary><b>{E(s['ticker'])}</b> {E(m.get('name'))}</summary>
 <div class="det">Sector: {E(m.get('sector'))} / {E(m.get('industry'))} · {E(m.get('country'))}<br>
@@ -47,8 +54,11 @@ DCF value {f(m.get('dcf_value'), ' ' + (m.get('currency') or ''), 2)} (upside {f
 Themes: {E(', '.join(s.get('all_themes', [])))} · Data coverage {f((s.get('coverage') or 0) * 100, '%', 0)}<br>
 분석 상태: {E(s.get('analysis_status', 'legacy_score_requires_rerun'))} · 자료: {E(s.get('data_quality', 'unverified'))}<br>
 가치 시나리오: {scenarios}<br>가정: {E(val.get('assumption_source'))} · {assumptions}<br>
+역산 DCF: {E(reverse.get('status', '보류'))} · 내재 현금흐름 성장률 {f(reverse.get('implied_growth'), '%')}<br>
 정상화: {E(m.get('normalization_method'))} · {E(m.get('normalization_note'))}<br>
 수집 시각: {E(m.get('collected_at'))} · 기간 말: {E(m.get('period_end'))}<br>
+공식 공시 대조: {E(verification.get('status', 'not_collected'))} · {comparisons}<br>
+<small>항목 일치는 가치평가 전체 검증을 의미하지 않습니다.</small><br>
 Risk flags: {E(flags)}</div></details>"""
         reasons = f'<td>{E(", ".join(s.get("avoid", [])))}</td>' if show_reasons else ""
         out.append(f"""<tr><td>{FLAG.get(s.get('market'), '')}</td><td class="name">{detail}</td>
@@ -76,7 +86,7 @@ def render(r: dict, static: bool = False) -> str:
         for code, meta in COUNTRIES.items())
     summary = "".join(f'<tr><td>{E(meta["name"])}</td><td>{meta.get("configured", 0)}</td>'
                       f'<td>{meta.get("analyzed", 0)}</td><td>{meta.get("valuation_available", 0)}</td>'
-                      f'<td>{meta.get("candidates", 0)}</td><td>{E(meta.get("data_status", "미수집"))}</td></tr>'
+                      f'<td>{meta.get("candidates", 0)}</td><td>{E(meta.get("data_status", "미수집"))} · 분석일 {E(meta.get("analysis_day") or "–")}<br>공시: {E(SOURCE_STATUS.get(meta.get("official_source_status"), "미수집"))} · 원본 {meta.get("official_snapshots", 0)}건 · 항목 일치 {meta.get("matched_fields", 0)}개 기업</td></tr>'
                       for code, meta in countries.items() if not selected or code == selected)
     country_section = f'<h2>국가별 가치투자</h2><nav>{links}</nav><div class="scroll"><table><tr><th>국가</th><th>설정 종목</th><th>분석 기록</th><th>가치평가 가능</th><th>안전마진 후보</th><th>데이터 상태</th></tr>{summary}</table></div><p class="na">명시적 후보 목록 기준 · 공식 공시 검증 전 · 할인율은 초기 가정 · 미수집 자료는 순위에 포함하지 않습니다.</p>'
     mac = r.get("macro") or {}
@@ -101,11 +111,12 @@ def render(r: dict, static: bool = False) -> str:
 
     lr = r.get("last_run") or {}
     run_btn = "" if static else """<button id="run" onclick="runNow()">Run now / 지금 실행</button>
+<button id="official" onclick="runNow('official')">공식 공시 수집</button>
 <span id="st" class="na"></span>"""
     script = "" if static else """<script>
-async function runNow(){const b=document.getElementById('run'),s=document.getElementById('st');
-b.disabled=true;s.textContent=' Running… 실행 중 (5–15 min)';
-await fetch('api/run?step=all',{method:'POST'});
+async function runNow(step='all'){const b=document.getElementById('run'),o=document.getElementById('official'),s=document.getElementById('st');
+b.disabled=true;o.disabled=true;s.textContent=' 실행 중… 완료 후 수집 상태를 확인하세요.';
+await fetch('api/run?step='+step,{method:'POST'});
 const t=setInterval(async()=>{const j=await (await fetch('api/status')).json();
 if(!j.running){clearInterval(t);location.reload();}},10000);}
 </script>"""
@@ -170,7 +181,7 @@ last run: {E(lr.get('status'))} {E((lr.get('finished') or lr.get('started') or '
 {stock_table(r.get('review_list', []), '보류 종목 없음', show_reasons=True)}
 <footer>점수 = 가치평가 35 + 사업의 질 25 + 재무 20 + 자본배분 10 + 성장 10.<br>
 자료가 없는 항목은 0점이며, 핵심 가치평가 자료 부족 시 총점을 부여하지 않습니다. 뉴스·거시는 투자 점수에 포함하지 않습니다.<br>
-Data: Yahoo Finance (보조 데이터), Google News, FRED (미국). 공식 공시 수집·역사 시점 백테스트는 아직 연결 전입니다.<br>
+Data: Yahoo Finance (보조 데이터), SEC·DART (설정 시 공식 공시 수집), Google News, FRED (미국). 전체 가치평가 검증과 역사 시점 백테스트는 아직 미완료입니다.<br>
 AI does not make investment decisions. This is a list of companies worth reviewing — the final decision is yours.<br>
 AI가 투자 결정을 대신하지 않습니다. 검토할 가치가 있는 기업 리스트이며, 최종 판단은 투자자가 합니다.</footer>
 </main>{script}</body></html>"""

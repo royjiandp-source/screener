@@ -220,3 +220,14 @@ def test_legacy_api_scores_require_rerun(tmp_path, monkeypatch):
     c = TestClient(app)
     assert c.get("/api/stocks/AAPL").json()["total"] is None
     assert c.get("/api/stocks").json()[0]["analysis_status"] == "requires_rerun"
+
+
+def test_reverse_dcf_recovers_price_implied_growth():
+    from app import valuation
+    price = valuation.dcf(100, 10, growth=5, discount=10, terminal=2, net_debt=20)
+    result = valuation.reverse_dcf(100, 10, price, discount=10, terminal=2, net_debt=20)
+    assert result["status"] == "estimated"
+    assert result["implied_growth"] == pytest.approx(5, abs=1e-5)
+    assert valuation.reverse_dcf(100, 10, 1e9)["status"] == "outside_search_range"
+    with pytest.raises(ValueError):
+        valuation.reverse_dcf(100, 10, -1)

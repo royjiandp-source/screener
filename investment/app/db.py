@@ -33,6 +33,22 @@ CREATE TABLE IF NOT EXISTS runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT, started TEXT, finished TEXT,
     step TEXT, status TEXT, message TEXT
 );
+CREATE TABLE IF NOT EXISTS filing_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, ticker TEXT NOT NULL, market TEXT NOT NULL,
+    source TEXT NOT NULL, content_hash TEXT NOT NULL, observed_at TEXT NOT NULL,
+    raw_json TEXT NOT NULL, UNIQUE(ticker, source, content_hash)
+);
+CREATE TABLE IF NOT EXISTS filing_facts (
+    snapshot_id INTEGER NOT NULL, available_at TEXT NOT NULL, fact_json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_filing_fact_snapshot ON filing_facts(snapshot_id);
+CREATE TABLE IF NOT EXISTS official_entities (
+    ticker TEXT NOT NULL, source TEXT NOT NULL, entity_id TEXT NOT NULL,
+    PRIMARY KEY(ticker, source)
+);
+CREATE TABLE IF NOT EXISTS official_source_status (
+    market TEXT PRIMARY KEY, status TEXT NOT NULL, updated_at TEXT NOT NULL, data TEXT NOT NULL
+);
 """
 
 
