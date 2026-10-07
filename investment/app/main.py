@@ -35,6 +35,12 @@ def _start_scheduler():
 @asynccontextmanager
 async def lifespan(app):
     global scheduler
+    from .discovery.jobs import recover, start_pending
+    c = connect()
+    try:
+        recover(c)
+        start_pending(c)
+    finally: c.close()
     if os.environ.get("DISABLE_SCHEDULER") != "1":
         scheduler = _start_scheduler()
     yield
@@ -43,6 +49,10 @@ async def lifespan(app):
 
 
 app = FastAPI(title="AI Investment Idea Discovery", version="1.0", lifespan=lifespan)
+from .discovery.api import router as discovery_router
+app.include_router(discovery_router)
+from .discovery.limits import DiscoveryLimits
+app.add_middleware(DiscoveryLimits)
 
 
 @app.get("/", response_class=HTMLResponse)

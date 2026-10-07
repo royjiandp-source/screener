@@ -6,3 +6,7 @@ pandas
 requests
 lxml
 google-genai
+
+openpyxl>=3.1
+xlrd>=2.0
+pykrx>=1.0

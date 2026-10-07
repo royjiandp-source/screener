@@ -104,3 +104,71 @@ Yahoo의 연결 범위는 자동으로 확정하지 않습니다. 원문 검토 
 ## 다음 단계로 보류
 
 ETF 자금, 내부자 거래, 공매도, 기관 매매, 복잡한 포트폴리오 최적화는 핵심 가치평가와 데이터 검증이 작동한 뒤 도입합니다.
+
+## 거래소 전체 검색과 관찰 지표
+
+화면의 **섹터 검색**에서 국가와 검색어를 선택합니다. 결과에는 분류 근거와 출처가 표시됩니다. 선택 종목 또는 검색 결과 전체의 가치평가를 실행할 수 있습니다. 실행은 종목별로 진행되며 취소는 진행 중인 종목의 수집이 끝난 후 반영됩니다. 다른 종목의 기존 평가와 전체 테마 자료는 보존합니다. 검색 결과 전체의 관찰 자료 수집도 지원하지만 공급자 호출이 많으므로 시간이 걸립니다.
+
+전체 목록과 테마 분류는 별개입니다. 공식 업종과 보조 사업 설명에서 확인한 테마 관계를 검색하며, 미분류 기업은 테마 검색에서 빠질 수 있습니다. 유사한 단어만으로 실제 사업 비중을 입증하지 않습니다. 관찰 점수는 미래 주도주나 수익률을 확정하는 예측값이 아닙니다.
+
+현재 실제 연결을 확인한 범위:
+
+| 시장 | 상장 목록 | ETF·기관 자료 |
+|---|---|---|
+| 한국 | KRX KIND 2,758개 기업 (기업 목록이며 우선주·ETF 전 종목 목록 아님) | 기관 순매수 수집기 구현; KRX 로그인 설정 필요 |
+| 미국 | Nasdaq/기타 거래소 13,251개 증권, ETF 유형 분리 | ETF 보조 자료; SEC 13F 수집기, 연락처와 확인된 CUSIP 연결 필요 |
+| 일본 | JPX 4,447개 증권 | 공식 ETF 자금·기관 자동 연결 미지원; 검증된 자료 입력 가능 |
+| 대만 | TWSE/TPEx 1,988개 기업 | 공식 ETF 자금·기관 자동 연결 미지원; 검증된 자료 입력 가능 |
+| 홍콩 | HKEX 17,265개 증권, 주식·ETF·기타 유형 구분 | 공식 ETF 자금·기관 자동 연결 미지원; 검증된 자료 입력 가능 |
+| 싱가포르 | 자동 목록 연결 미구현; 출처가 있는 목록 입력 가능 | 공식 ETF 자금·기관 자동 연결 미지원; 검증된 자료 입력 가능 |
+
+수치는 연결 검증 당시의 목록이며 기업 수와 증권 수를 서로 같은 것으로 비교하지 마세요. 전체 6개 국가에서 모든 ETF·기관 자료가 자동 수집되는 완료 상태가 아닙니다.
+
+**관찰·ETF 자료 수집**은 사업 설명 분류, 조정 가격, 시장 대비 3/6/12개월 강세, 매출·이익률·영업현금흐름 변화와 거래대금 변화를 수집합니다. 상대강도 및 최소 두 실적 항목, 거래대금 순위, 같은 시점의 비교 표본 20개가 필요하며 부족하면 점수를 보류합니다. 개별 주식과 비교 ETF 모두 배당·분할 조정 수익률을 사용합니다. 비교 ETF는 KR 069500, US SPY, JP 1306, TW 0050, HK 2800, SG ES3이며 ETF 비용·추적 오차와 대표 지수의 시장 범위 차이가 있습니다. 기존 가격지수 기준 기록은 순위 표본에서 제외합니다. 수주·컨센서스 상향의 자동 수집과 예측력 백테스트는 포함되지 않습니다.
+
+ETF 보조 자료는 NAV·규모·상위 보유 종목이며 자료 기준일이 독립 확인되지 않은 경우 설정/환매를 계산하지 않습니다. 실제 발행좌수·NAV·기업행동 확인이 있는 동일 기준일 자료를 입력할 때만 설정/환매 추정이 가능합니다. AUM 변화나 거래대금을 자금 유입이라고 표시하지 않습니다. 운용사별 공식 설정/환매 자동 수집기는 아직 연결하지 않았습니다.
+
+한국 기관 자료는 `KRX_ID`, `KRX_PW`를 로컬 `.env`에 설정해야 합니다. DART 키와는 별개입니다. 서버가 실행 중이면 설정 후 다시 시작해야 합니다. 미국은 `SEC_USER_AGENT` 설정 후 기관의 CIK로 수집합니다. 13F는 분기 보유 공시로 실제 거래일이나 매수금액을 알 수 없습니다. 확인된 CUSIP 매핑이 없는 종목과 옵션은 주식 변화 분석에 자동 합치지 않습니다. 최근 공시의 두 분기 범위와 수정 공시를 대상으로 하며 관리자 전체 시장을 대표하지 않습니다. 공개된 동일 관리자 보유 수와 가치 변화는 구분하지만 자료가 없는 종목을 신규 매수·청산으로 단정하지 않습니다.
+
+### 추가 API
+
+- `GET /api/discovery/search?query=반도체&market=KR&offset=0&limit=50`
+- `GET /api/discovery/sources`
+- `POST /api/discovery/refresh?market=JP`
+- `POST /api/discovery/evaluate`: `listing_ids` 또는 `query`와 선택적 `market`
+- `POST /api/discovery/enrich`: 같은 입력으로 분류·관찰·ETF 자료 수집
+- `GET /api/discovery/jobs/{id}` / `POST /api/discovery/jobs/{id}/cancel`
+- `POST /api/discovery/jobs/{id}/resume`: 서버 재시작으로 중단된 작업 재개
+- `GET /api/discovery/detail?listing_id=KR:KOSPI:000660:stock`
+- `GET /api/discovery/leadership?query=반도체&market=KR`
+- `POST /api/discovery/institution/refresh?listing_id=...&start=2026-09-01&end=2026-09-30`
+- `POST /api/discovery/institution/sec13f?manager_cik=...`
+- `POST /api/discovery/import` / `POST /api/discovery/flows/import`
+
+자료 입력은 화면 **기관 공시·자료 연결**에서 JSON 파일을 불러오거나 API로 수행합니다. 목록 예:
+
+```json
+{
+  "market": "SG", "source": "검토한 SGX 내보내기 자료",
+  "observed_at": "2026-10-07T00:00:00Z", "complete": true,
+  "rows": [{"id":"SG:SGX:EXAMPLE:stock", "market":"SG", "exchange":"SGX",
+    "code":"EXAMPLE", "ticker":"EXAMPLE.SI", "name":"형식 예시 기업",
+    "type":"stock", "currency":"SGD", "industry":"Semiconductors"}]
+}
+```
+
+위 종목은 파일 형식만 설명하는 예시이며 실제 검색 목록에 자동 삽입하지 않습니다. 완전 목록의 `complete:true`는 해당 시장의 활성 목록을 대체하므로 전 종목 자료임을 확인해야 합니다. 부분 자료는 이전 활성 목록을 보존합니다. 입력된 출처와 자동 연결은 별도로 표시합니다.
+
+ETF NAV 자료 예:
+
+```json
+{
+  "listing_id":"US:NYSEARCA:EXAMPLE:etf", "kind":"etf_nav",
+  "period":"2026-09-30", "available_at":"2026-10-01T00:00:00Z",
+  "data":{"source":"확인한 운용사 원문", "nav":100, "shares":1000000,
+    "currency":"USD", "nav_date":"2026-09-30", "shares_date":"2026-09-30",
+    "corporate_actions_verified":true, "share_adjustment_factor":1}
+}
+```
+
+현재 목록의 실제 식별자로 바꿔야 합니다. 기업행동 확인을 생략하면 추정은 보류합니다. 실제 설정/환매는 `etf_reported_flow`와 `net_creation`·통화, 보유 구성은 `etf_holdings`와 기준일·구성 비중을 사용합니다. 자료의 첫 수집 시점은 시스템이 현재 시각으로 기록하며 입력한 과거 날짜로 소급하지 않습니다. API 입력은 10MB, 변경 요청은 클라이언트별 분당 30회로 제한합니다. 정적 GitHub Pages 결과에는 검색·계산 서버가 포함되지 않습니다.

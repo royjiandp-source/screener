@@ -178,7 +178,7 @@ def fetch(ticker: str) -> dict:
     except Exception:
         mom_1m = None
 
-    r = lambda x, d=2: round(x, d) if x is not None else None  # noqa: E731
+    r = lambda x, d=2: round(_num(x), d) if _num(x) is not None else None  # noqa: E731
     history = annual_fcff(inc, cf)
     normalized = statistics.median(p["fcff"] for p in history) if len(history) >= 3 else None
     return {

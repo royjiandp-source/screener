@@ -1,6 +1,7 @@
 """Dashboard HTML (no template engine). / 대시보드 화면."""
 import html
 from .countries import COUNTRIES
+from .discovery.ui import section as discovery_section
 
 E = lambda x: html.escape("" if x is None else str(x))  # noqa: E731
 
@@ -156,6 +157,7 @@ last run: {E(lr.get('status'))} {E((lr.get('finished') or lr.get('started') or '
 <div>{run_btn}</div></div>
 
 {country_section}
+{discovery_section() if not static else ""}
 <h2>미국 거시 참고 정보 · Economic cycle</h2>
 <span class="cycle">{E(cycle)} · {CYCLE_KO.get(cycle, '')}</span>
 <span class="na"> Favored themes 유리한 테마: {E(', '.join(favored) or '–')}</span>

@@ -1,6 +1,7 @@
 """SQLite storage. / 데이터 저장 (SQLite)."""
 import datetime as dt
 import json
+import math
 import os
 import sqlite3
 from pathlib import Path
@@ -74,14 +75,19 @@ def today() -> str:
 
 
 def dumps(x) -> str:
-    return json.dumps(x, ensure_ascii=False, default=str)
+    def clean(value):
+        if isinstance(value,float) and not math.isfinite(value):return None
+        if isinstance(value,dict):return {k:clean(v) for k,v in value.items()}
+        if isinstance(value,(list,tuple)):return [clean(v) for v in value]
+        return value
+    return json.dumps(clean(x), ensure_ascii=False, default=str, allow_nan=False)
 
 
 def loads(s, default=None):
     if s is None:
         return default
     try:
-        return json.loads(s)
+        return json.loads(s, parse_constant=lambda _: None)
     except (TypeError, ValueError):
         return default
 

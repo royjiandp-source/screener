@@ -61,19 +61,19 @@ def get_financials(con, tickers) -> dict:
     return out
 
 
-def run_score(con, markets=MARKETS) -> dict:
+def run_score(con, markets=MARKETS, tickers=None) -> dict:
     cfg = load_themes()
     th_cfg, cycles, risk_cfg = cfg["themes"], cfg["cycles"], cfg["risk"]
 
     # 1) theme engine output  2) macro cycle
     tm = theme_mod.theme_momentum(con, th_cfg)
-    mac = get_macro(con)
+    mac = get_macro(con) if tickers is None else {}
     cycle = mac.get("cycle", "Unknown")
 
     # Candidates are selected independently of news and theme membership.
     universe = load_universe()
     stock_themes = {tk: [] for market in markets
-                    for tk in universe["markets"].get(market, [])}
+                    for tk in universe["markets"].get(market, [])} if tickers is None else {tk: [] for tk in tickers}
     for name, c in th_cfg.items():
         for market in markets:
             for tk in c["tickers"].get(market, []):
@@ -92,16 +92,15 @@ def run_score(con, markets=MARKETS) -> dict:
     max_count = max((v["news_count"] for v in tm.values()), default=0)
 
     day = today()
-    con.execute("DELETE FROM theme_scores WHERE day=?", (day,))
-    for market in markets:
-        con.execute("DELETE FROM stock_scores WHERE day=? AND market=?", (day, market))
-    for name in th_cfg:
-        t = tm[name]
-        row = {**{k: v for k, v in t.items()}, "flow_1m": flows[name],
-               "score": scoring.theme_score(t, max_count, flows[name]),
-               "industries": th_cfg[name]["industries"],
-               "favored_by_cycle": name in cycles.get(cycle, [])}
-        con.execute("INSERT INTO theme_scores(day,theme,data) VALUES(?,?,?)", (day, name, dumps(row)))
+    if tickers is None:
+        con.execute("DELETE FROM theme_scores WHERE day=?", (day,))
+        for name in th_cfg:
+            t = tm[name]
+            row = {**{k: v for k, v in t.items()}, "flow_1m": flows[name],
+                   "score": scoring.theme_score(t, max_count, flows[name]),
+                   "industries": th_cfg[name]["industries"],
+                   "favored_by_cycle": name in cycles.get(cycle, [])}
+            con.execute("INSERT INTO theme_scores(day,theme,data) VALUES(?,?,?)", (day, name, dumps(row)))
 
     # 5) risk + 6) scoring
     scored = 0
@@ -119,11 +118,15 @@ def run_score(con, markets=MARKETS) -> dict:
         best["all_themes"] = names
         data = {"metrics": m, **best, "market": market_of(tk),
                 "listing_country": market_of(tk), "domicile_country": m.get("country")}
-        con.execute("INSERT INTO stock_scores(day,ticker,market,total,data) VALUES(?,?,?,?,?)",
+        con.execute("INSERT OR REPLACE INTO stock_scores(day,ticker,market,total,data) VALUES(?,?,?,?,?)",
                     (day, tk, market_of(tk), best["total"], dumps(data)))
         scored += 1
     con.commit()
     return {"day": day, "cycle": cycle, "candidates": len(stock_themes), "scored": scored}
+
+
+def score_tickers(con, tickers):
+    return run_score(con, tuple({market_of(t) for t in tickers}), tickers=tickers)
 
 
 # ------------------------------------------------------------------ run wrapper
@@ -176,7 +179,7 @@ def stocks(con, day=None, market=None, limit=None) -> list:
         q, args = "SELECT ticker,day,data FROM stock_scores WHERE day=?", [day]
     else:
         q, args = ("SELECT ticker,day,data FROM stock_scores s WHERE day="
-                   "(SELECT MAX(day) FROM stock_scores newest WHERE newest.market=s.market)"), []
+                   "(SELECT MAX(day) FROM stock_scores newest WHERE newest.ticker=s.ticker)"), []
     if market:
         q += " AND market=?"
         args.append(market.upper())
