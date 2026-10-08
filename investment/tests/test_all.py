@@ -46,7 +46,11 @@ def env(tmp_path, monkeypatch):
         replace_catalog(con,market,rows,'Offline exchange fixture','2026-10-01T00:00:00Z',True)
     con.close()
     from app import pipeline
-    monkeypatch.setattr(pipeline, "run_catalog", lambda con, markets=None: {"offline": "skipped"})  # no network in tests
+    # No network in tests: GitHub runners have internet, so real Yahoo calls would change results.
+    monkeypatch.setattr(pipeline, "run_catalog", lambda con, markets=None, **k: {"offline": "skipped"})
+    monkeypatch.setattr(pipeline, "run_signals", lambda con, markets=None, **k: {"offline": "skipped"})
+    from app.flows import collection
+    monkeypatch.setattr(collection, "run_funds", lambda con, markets=None, **k: {"offline": "skipped"})
     return tmp_path
 
 
