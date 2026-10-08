@@ -22,7 +22,9 @@ CREATE INDEX IF NOT EXISTS ix_articles_pub ON articles(published);
 CREATE TABLE IF NOT EXISTS fin_cache (
     ticker TEXT, day TEXT, data TEXT, PRIMARY KEY (ticker, day)
 );
-CREATE TABLE IF NOT EXISTS macro (day TEXT PRIMARY KEY, data TEXT);
+CREATE TABLE IF NOT EXISTS score_attempts (
+    ticker TEXT PRIMARY KEY, day TEXT, status TEXT
+);
 CREATE TABLE IF NOT EXISTS theme_scores (
     day TEXT, theme TEXT, data TEXT, PRIMARY KEY (day, theme)
 );

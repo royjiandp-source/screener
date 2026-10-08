@@ -8,17 +8,19 @@ CLI:
     python -m app.pipeline all --export ../docs/invest/index.html
 """
 import argparse
+import os
+import time
 import threading
 import traceback
 from pathlib import Path
 
-from . import financials, macro, news, scoring, themes as theme_mod
+from . import financials, news, scoring, themes as theme_mod
 from .db import connect, dumps, load_themes, load_universe, loads, now, today
-from .countries import COUNTRIES, market_of
+from .countries import SEARCH_MARKETS, market_of
 from .filings import service as official
 from .filings.store import verify_metrics
 
-MARKETS = tuple(COUNTRIES)
+MARKETS = SEARCH_MARKETS
 _lock = threading.Lock()
 STATUS = {"running": False, "step": None, "started": None, "last": None}
 
@@ -29,17 +31,6 @@ def run_news(con, markets=MARKETS) -> dict:
     c = news.collect(con, tuple(m for m in markets if m in news.EDITIONS))
     a = theme_mod.analyze_pending(con, cfg["themes"])
     return {**c, **a}
-
-
-def get_macro(con, refresh=False) -> dict:
-    day = today()
-    row = con.execute("SELECT data FROM macro WHERE day=?", (day,)).fetchone()
-    if row and not refresh:
-        return loads(row["data"], {})
-    data = macro.snapshot()
-    con.execute("INSERT OR REPLACE INTO macro(day,data) VALUES(?,?)", (day, dumps(data)))
-    con.commit()
-    return data
 
 
 def get_financials(con, tickers) -> dict:
@@ -61,51 +52,58 @@ def get_financials(con, tickers) -> dict:
     return out
 
 
-def run_score(con, markets=MARKETS, tickers=None) -> dict:
-    cfg = load_themes()
-    th_cfg, cycles, risk_cfg = cfg["themes"], cfg["cycles"], cfg["risk"]
-
-    # 1) theme engine output  2) macro cycle
-    tm = theme_mod.theme_momentum(con, th_cfg)
-    mac = get_macro(con) if tickers is None else {}
-    cycle = mac.get("cycle", "Unknown")
-
-    # Candidates are selected independently of news and theme membership.
+def _score_queue(con, markets):
+    """Configured candidates first (kept fresh daily), then the rest of the catalog, oldest first.
+    Markets alternate so a large US catalog cannot starve KR/SG."""
+    from .discovery.store import search
     universe = load_universe()
-    stock_themes = {tk: [] for market in markets
-                    for tk in universe["markets"].get(market, [])} if tickers is None else {tk: [] for tk in tickers}
-    for name, c in th_cfg.items():
+    configured = {t for m in markets for t in universe["markets"].get(m, [])}
+    last = {r[0]: r[1] or "" for r in con.execute("SELECT ticker, MAX(day) FROM stock_scores GROUP BY ticker")}
+    for r in con.execute("SELECT ticker, day FROM score_attempts"):
+        last[r[0]] = max(last.get(r[0], ""), r[1] or "")
+    day = today()
+    queues = []
+    for market in markets:
+        tickers = list(dict.fromkeys(x["ticker"] for x in search(con, "", market, limit=1000000)["items"]
+                                     if x["type"] in ("stock", "adr")))
+        tickers = [t for t in tickers if last.get(t, "") < day]
+        tickers.sort(key=lambda t: (t not in configured, last.get(t, ""), t))
+        queues.append(tickers)
+    return [q[i] for i in range(max((len(q) for q in queues), default=0)) for q in queues if i < len(q)]
+
+
+def run_score(con, markets=MARKETS, tickers=None, limit=None, max_seconds=None) -> dict:
+    """Score explicit tickers, or a bounded rotating batch of the whole catalog.
+    전체 목록은 한 번에 평가하지 않고 매 실행마다 일부씩 순환 평가합니다."""
+    universe = load_universe()
+    pending = 0
+    if tickers is None:
+        limit = int(os.environ.get("INVEST_SCORE_BATCH", "150")) if limit is None else limit
+        max_seconds = float(os.environ.get("INVEST_SCORE_SECONDS", "900")) if max_seconds is None else max_seconds
+        queue = _score_queue(con, markets)
+        tickers, pending = queue[:max(0, limit)], len(queue)
+    stock_themes = {tk: [] for tk in tickers}
+    th_cfg = load_themes()['themes']
+    for name, cfg in th_cfg.items():
         for market in markets:
-            for tk in c["tickers"].get(market, []):
+            for tk in cfg['tickers'].get(market, []):
                 if tk in stock_themes:
                     stock_themes[tk].append(name)
-
-    # 4) financial statements + valuation
-    fin = get_financials(con, list(stock_themes))
-
-    # money flow proxy: average 1-month price move of each theme's stocks
-    flows = {}
-    for name, c in th_cfg.items():
-        moves = [fin[t]["mom_1m"] for m in markets for t in c["tickers"].get(m, [])
-                 if fin.get(t) and fin[t].get("mom_1m") is not None]
-        flows[name] = round(sum(moves) / len(moves), 2) if moves else None
-    max_count = max((v["news_count"] for v in tm.values()), default=0)
-
     day = today()
-    if tickers is None:
-        con.execute("DELETE FROM theme_scores WHERE day=?", (day,))
-        for name in th_cfg:
-            t = tm[name]
-            row = {**{k: v for k, v in t.items()}, "flow_1m": flows[name],
-                   "score": scoring.theme_score(t, max_count, flows[name]),
-                   "industries": th_cfg[name]["industries"],
-                   "favored_by_cycle": name in cycles.get(cycle, [])}
-            con.execute("INSERT INTO theme_scores(day,theme,data) VALUES(?,?,?)", (day, name, dumps(row)))
 
-    # 5) risk + 6) scoring
-    scored = 0
+    # 5) risk + 6) scoring, one ticker at a time so the time budget is respected
+    scored, failed, attempted = 0, 0, 0
+    started = time.monotonic()
     for tk, names in stock_themes.items():
-        m = fin.get(tk) or {"ticker": tk, "fetch_error": True}
+        if max_seconds is not None and time.monotonic() - started >= max_seconds:
+            break
+        attempted += 1
+        m = get_financials(con, [tk]).get(tk)
+        if not m or m.get("fetch_error"):
+            failed += 1
+            con.execute("INSERT OR REPLACE INTO score_attempts(ticker,day,status) VALUES(?,?,?)", (tk, day, "failed"))
+            con.commit()
+            continue
         # User-supplied company assumptions override explicit illustrative defaults.
         m = {**universe.get("valuation_assumptions", {}), **m,
              **universe.get("company_assumptions", {}).get(tk, {})}
@@ -120,9 +118,69 @@ def run_score(con, markets=MARKETS, tickers=None) -> dict:
                 "listing_country": market_of(tk), "domicile_country": m.get("country")}
         con.execute("INSERT OR REPLACE INTO stock_scores(day,ticker,market,total,data) VALUES(?,?,?,?,?)",
                     (day, tk, market_of(tk), best["total"], dumps(data)))
+        con.execute("INSERT OR REPLACE INTO score_attempts(ticker,day,status) VALUES(?,?,?)", (tk, day, "scored"))
+        con.commit()
         scored += 1
-    con.commit()
-    return {"day": day, "cycle": cycle, "candidates": len(stock_themes), "scored": scored}
+    return {"day": day, "candidates": len(stock_themes), "attempted": attempted, "scored": scored,
+            "failed": failed, "remaining_today": max(0, pending - attempted)}
+
+
+def run_catalog(con, markets=MARKETS, max_age_days=None) -> dict:
+    """Refresh exchange lists that are missing or older than INVEST_CATALOG_DAYS (default 7)."""
+    import datetime as dt
+    from .discovery.providers import refresh_market
+    from .discovery.store import init
+    from .filings.common import utc
+    init(con)
+    days = int(os.environ.get("INVEST_CATALOG_DAYS", "7")) if max_age_days is None else max_age_days
+    cutoff = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=days)).isoformat(timespec="seconds")
+    out = {}
+    for market in markets:
+        row = con.execute("SELECT MAX(observed_at) FROM catalog_snapshots WHERE market=?", (market,)).fetchone()
+        if row and row[0] and utc(row[0]) >= cutoff:
+            out[market] = "fresh"
+            continue
+        out[market] = refresh_market(con, market).get("status")
+    return out
+
+
+def run_signals(con, markets=MARKETS, limit=None, max_seconds=300):
+    """Collect a bounded rotating batch before exporting; keep prior facts on failure."""
+    from .discovery.store import search, save_flow
+    from .discovery.profiles import enrich_listing
+    from .filings.common import utc
+    limit = int(os.environ.get('INVEST_SIGNAL_BATCH', '100')) if limit is None else limit
+    latest = {r['listing_id']: r['attempted'] for r in con.execute(
+        "SELECT listing_id, MAX(CASE WHEN kind='leadership' THEN period ELSE observed_at END) attempted FROM flow_snapshots "
+        "WHERE kind IN ('leadership','signal_collection_status') GROUP BY listing_id")}
+    scored = {r['ticker'] for r in con.execute('SELECT DISTINCT ticker FROM stock_scores')}
+    day = utc()[:10]
+    queues = []
+    for market in markets:
+        rows = [x for x in search(con, '', market, limit=1000000)['items']
+                if x['type'] in ('stock', 'adr') and latest.get(x['id'], '')[:10] < day]
+        rows.sort(key=lambda x: (latest.get(x['id'], ''), x['ticker'] not in scored, x['code']))
+        queues.append(rows)
+    # Alternate markets so a large US/KR catalog cannot starve the other markets.
+    selected = [q[i] for i in range(max((len(q) for q in queues), default=0)) for q in queues if i < len(q)]
+    result = {'candidates': len(selected), 'attempted': 0, 'collected': 0, 'failed': 0}
+    started = time.monotonic()
+    for item in selected[:max(0, limit)]:
+        if time.monotonic() - started >= max_seconds:
+            break
+        try:
+            data = enrich_listing(con, item['id'])
+            if not data.get('period'):
+                raise ValueError('No comparable price dates')
+            state = {'status': 'collected', 'period': data['period']}
+            result['collected'] += 1
+        except Exception as exc:
+            state = {'status': 'failed', 'reason': type(exc).__name__}
+            result['failed'] += 1
+        save_flow(con, item['id'], 'signal_collection_status', day, state)
+        result['attempted'] += 1
+    result['remaining'] = len(selected) - result['attempted']
+    return result
 
 
 def score_tickers(con, tickers):
@@ -141,10 +199,17 @@ def run(step: str = "all", markets=MARKETS) -> dict:
     con.commit()
     try:
         out = {}
+        if step in ("catalog", "all"):
+            out["catalog"] = run_catalog(con, markets)
         if step in ("news", "all"):
             out["news"] = run_news(con, markets)
         if step in ("official", "all"):
             out["official"] = official.collect(con, markets)
+        if step in ("flows", "signals", "score", "all"):
+            from .flows.collection import run_funds
+            out["funds"] = run_funds(con, markets)
+        if step in ("signals", "score", "all"):
+            out["signals"] = run_signals(con, markets)
         if step in ("score", "all"):
             out["score"] = run_score(con, markets)
         status, msg = "ok", dumps(out)
@@ -189,66 +254,21 @@ def stocks(con, day=None, market=None, limit=None) -> list:
     return [{**current_score(loads(r["data"], {})), "ticker": r["ticker"], "day": r["day"]} for r in con.execute(q, args)]
 
 
-def theme_table(con, day=None) -> list:
-    day = day or latest_day(con)
-    rows = [{"theme": r["theme"], **loads(r["data"], {})}
-            for r in con.execute("SELECT theme,data FROM theme_scores WHERE day=?", (day,))]
-    return sorted(rows, key=lambda x: x.get("score", 0), reverse=True)
+def report(con, market=None, **filters) -> dict:
+    from .dashboard import build_report
+    return build_report(con, market=market, **filters)
 
 
-def country_table(con, rows=None):
-    rows = stocks(con) if rows is None else rows
-    universe = load_universe()
-    result = {}
-    official_statuses = official.source_status(con)
-    for code, meta in COUNTRIES.items():
-        subset = [s for s in rows if s.get("market") == code and s.get("score_version") == "value-v1"]
-        analyzed = len(subset)
-        snapshots = con.execute("SELECT COUNT(*) FROM filing_snapshots WHERE market=?", (code,)).fetchone()[0]
-        facts_count = con.execute("SELECT COUNT(*) FROM filing_facts f JOIN filing_snapshots s ON s.id=f.snapshot_id WHERE s.market=?", (code,)).fetchone()[0]
-        result[code] = {**meta, "configured": len(universe["markets"].get(code, [])),
-            "analyzed": analyzed,
-            "analysis_day": max((s.get("day", "") for s in subset), default=None),
-            "valuation_available": sum(s.get("valuation", {}).get("status") == "estimated" for s in subset),
-            "candidates": sum(bool(s.get("value_pick")) for s in subset),
-            "data_status": ("공시 수집됨 · 가치평가 미실행" if snapshots else "공시·가치평가 미수집") if not analyzed else "가치평가 기록 있음 · 대조 상태는 종목별 확인",
-            "official_source_status": official_statuses.get(code, {}).get("status", "not_collected"),
-            "official_source_connected": bool(con.execute(
-                "SELECT 1 FROM filing_snapshots WHERE market=? LIMIT 1", (code,)).fetchone()),
-            "official_snapshots": snapshots,
-            "official_facts": facts_count,
-            "matched_fields": sum(s.get("metrics", {}).get("official_verification", {}).get("status") == "matched_fields" for s in subset)}
+def static_report(con):
+    # Value candidates must never disappear behind inaccessible static pagination.
+    result = report(con, limit=1000000)
+    result['observations']['items'] = result['observations']['items'][:50]
     return result
-
-
-def report(con, market=None) -> dict:
-    day = latest_day(con)
-    all_stocks = stocks(con)
-    country_stats = country_table(con, all_stocks)
-    if market:
-        all_stocks = [s for s in all_stocks if s["market"] == market]
-    mac = loads((con.execute("SELECT data FROM macro ORDER BY day DESC LIMIT 1").fetchone() or {"data": None})["data"], {})
-    last_run = con.execute("SELECT * FROM runs ORDER BY id DESC LIMIT 1").fetchone()
-    n_news = con.execute("SELECT COUNT(*) c FROM articles").fetchone()["c"]
-    top = [s for s in all_stocks if s.get("score_version") == "value-v1"
-           and s.get("analysis_status") == "analyzable" and s.get("total") is not None]
-    by_market = {m: [s for s in top if s["market"] == m][:5] for m in MARKETS}
-    return {
-        "day": day, "generated": now().isoformat(timespec="minutes"),
-        "macro": mac, "themes": theme_table(con, day),
-        "countries": country_stats, "selected_market": market,
-        "review_list": [s for s in all_stocks if s not in top],
-        "top_stocks": top[:10], "top_by_market": by_market,
-        "value_picks": [s for s in top if s.get("value_pick")][:10],
-        "avoid_list": [s for s in all_stocks if s.get("avoid")],
-        "news_total": n_news,
-        "last_run": dict(last_run) if last_run else None,
-    }
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", nargs="?", default="all", choices=["news", "official", "score", "all", "none"])
+    ap.add_argument("step", nargs="?", default="all", choices=["catalog", "news", "official", "flows", "signals", "score", "all", "none"])
     ap.add_argument("--markets", nargs="+", default=list(MARKETS))
     ap.add_argument("--export", help="write the dashboard as a static HTML file")
     a = ap.parse_args()
@@ -259,7 +279,7 @@ def main():
         con = connect()
         p = Path(a.export)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(render(report(con), static=True), encoding="utf-8")
+        p.write_text(render(static_report(con), static=True), encoding="utf-8")
         print(f"Exported: {p.resolve()}")
 
 

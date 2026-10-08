@@ -5,7 +5,7 @@ from ..db import loads
 from ..valuation import finite
 from .etf import estimate_creation_flow
 
-KINDS={'etf_nav','etf_holdings','etf_reported_flow','institution_trades','institution_holdings'}
+KINDS={'etf_nav','etf_holdings','etf_reported_flow','institution_trades','institution_holdings','demand','earnings_estimates'}
 
 
 def ingest(con,lid,kind,period,data,available_at):
@@ -19,6 +19,21 @@ def ingest(con,lid,kind,period,data,available_at):
     import datetime as dt
     dt.date.fromisoformat(period)
     if period>available[:10]:raise ValueError('Period must precede availability')
+    if kind in ('demand','earnings_estimates') and item['type'] not in ('stock','adr'):raise ValueError('Company required')
+    if kind=='demand':
+        measurements=data.get('measurements')
+        if not isinstance(measurements,list) or not measurements:raise ValueError('Comparable demand measurements required')
+        for m in measurements:
+            if (not isinstance(m,dict) or m.get('metric') not in ('orders','volume','inventory','product_price')
+                    or not all(finite(m.get(k)) and m[k]>=0 for k in ('current','previous'))
+                    or not all(isinstance(m.get(k),str) and m[k].strip() for k in ('unit','product','current_period','previous_period'))
+                    or m['current_period']==m['previous_period']):raise ValueError('Demand requires comparable product, unit and periods')
+    if kind=='earnings_estimates':
+        if (not data.get('forecast_period') or not data.get('currency')
+                or not all(finite(data.get(k)) for k in ('current','previous'))
+                or not data.get('previous_observed_at')
+                or utc(data['previous_observed_at'])>=utc(period+'T23:59:59Z')
+                or data.get('previous_forecast_period',data['forecast_period'])!=data['forecast_period']):raise ValueError('Same forecast period and earlier estimate required')
     if kind.startswith('etf_') and item['type']!='etf':raise ValueError('ETF required')
     if kind=='etf_nav':
         if any(not finite(data.get(k)) or data[k]<=0 for k in ('nav','shares')) or not data.get('currency'):raise ValueError('NAV/share units and currency required')

@@ -23,6 +23,15 @@ def find(query:str=Query('',max_length=100),market:str|None=Query(None,pattern=P
     try: return search(c,query,market,offset,limit)
     finally:c.close()
 
+@router.get('/funds')
+def funds(query:str=Query('',max_length=100),market:str|None=Query(None,pattern=PATTERN),offset:int=Query(0,ge=0),limit:int=Query(20,ge=1,le=100)):
+    c=connect()
+    try:
+        result=search(c,query,market,limit=1000000)
+        rows=sorted((item for item in result['items'] if item['type']=='etf'),key=lambda item:(item['market'],item['code']))
+        return {'items':[{'listing':item,'flows':flows(c,item['id'])} for item in rows[offset:offset+limit]],'total':len(rows),'offset':offset,'limit':limit}
+    finally:c.close()
+
 @router.get('/sources')
 def sources():
     c=connect()
@@ -35,7 +44,10 @@ def refresh(market:str=Query(...,pattern=PATTERN)):
     if not _refresh_lock.acquire(False): return {'started':False,'reason':'목록 갱신 중'}
     def work():
         c=connect()
-        try: refresh_market(c,market)
+        try:
+            from .store import set_health
+            set_health(c,market,{'status':'refreshing'})
+            refresh_market(c,market)
         finally:c.close();_refresh_lock.release()
     threading.Thread(target=work,daemon=True).start()
     return {'started':True,'market':market}
@@ -145,19 +157,24 @@ def sec13f(manager_cik:str=Query(...,pattern='^[0-9]{1,10}$')):
     finally:c.close()
 
 @router.get('/leadership')
-def candidates(query:str=Query('',max_length=100),market:str|None=Query(None,pattern=PATTERN)):
-    from .profiles import observed_leadership
+def candidates(query:str=Query('',max_length=100),market:str|None=Query(None,pattern=PATTERN),offset:int=Query(0,ge=0),limit:int=Query(50,ge=1,le=100)):
+    from ..dashboard import build_report
     c=connect()
-    try:
-        results=search(c,query,market,limit=1000000)
-        rows=[]
-        for item in results['items']:
-            r=observed_leadership(c,item['id'])
-            if r['signals']:rows.append({'listing':item,**r})
-        rows.sort(key=lambda r:r['score'] if r['score'] is not None else -1,reverse=True)
-        rs=[r for r in rows if r['signals'].get('rs_3m') is not None]
-        return {'items':rows,'total_matches':results['total'],'observed':len(rows),'sector_breadth':sum(r['signals']['rs_3m']>0 for r in rs)/len(rs) if rs else None,'breadth_sample':len(rs),'note':'관찰 표본 기준; 분류되지 않은 기업과 미수집 자료는 포함되지 않습니다.'}
+    try:return build_report(c,market=market,query=query,observation_offset=offset,limit=limit)['observations']
     finally:c.close()
+
+class MarketEvaluation(BaseModel):
+    market:str|None=None
+
+@router.post('/evaluate-market')
+def evaluate_market(body:MarketEvaluation):
+    if body.market and body.market not in SEARCH_MARKETS:raise HTTPException(422,'Unknown market')
+    c=connect()
+    try:jid=create_job(c,market=body.market,kind='market_valuation')
+    except ValueError as e:raise HTTPException(422,str(e)) from None
+    finally:c.close()
+    threading.Thread(target=run_job,args=(jid,),daemon=True).start()
+    return {'id':jid,'state':'queued','note':'선택 시장의 전체 기업 평가를 시작합니다.'}
 
 @router.post('/jobs/{jid}/resume')
 def resume(jid:str):

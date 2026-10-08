@@ -9,7 +9,8 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
+from pathlib import Path
 
 from . import pipeline
 from .db import TZ, connect, loads
@@ -17,7 +18,7 @@ from .web import render
 from .filings.store import history
 from .filings.service import source_status
 
-MARKET_PATTERN = "^(KR|US|JP|TW|HK|SG)$"
+MARKET_PATTERN = "^(KR|US|SG)$"
 
 scheduler = None
 
@@ -28,6 +29,7 @@ def _start_scheduler():
     s = BackgroundScheduler(timezone=TZ)
     s.add_job(lambda: pipeline.run("news"), "cron", hour="7,12,18,23", minute=0, id="news")
     s.add_job(lambda: pipeline.run("score"), "cron", hour=7, minute=15, id="score")
+    s.add_job(lambda: pipeline.run("catalog"), "cron", day_of_week="mon", hour=6, minute=30, id="catalog")
     s.start()
     return s
 
@@ -56,10 +58,12 @@ app.add_middleware(DiscoveryLimits)
 
 
 @app.get("/", response_class=HTMLResponse)
-def dashboard(market: str | None = Query(None, pattern=MARKET_PATTERN)):
+def dashboard(market: str | None = Query(None, pattern=MARKET_PATTERN), query: str = Query('', max_length=100),
+              min_score: float = Query(60, ge=0, le=100), observation_offset: int = Query(0, ge=0), value_offset: int = Query(0, ge=0)):
     con = connect()
     try:
-        return render(pipeline.report(con, market=market))
+        return render(pipeline.report(con, market=market, query=query, min_score=min_score,
+                                      observation_offset=observation_offset, value_offset=value_offset))
     finally:
         con.close()
 
@@ -70,37 +74,31 @@ def health():
 
 
 @app.get("/api/report")
-def api_report(market: str | None = Query(None, pattern=MARKET_PATTERN)):
+def api_report(market: str | None = Query(None, pattern=MARKET_PATTERN), query: str = Query('', max_length=100),
+               min_score: float = Query(60, ge=0, le=100), observation_offset: int = Query(0, ge=0), value_offset: int = Query(0, ge=0),
+               limit: int = Query(50, ge=1, le=100)):
     con = connect()
     try:
-        return pipeline.report(con, market=market)
+        from .web import fragments
+        report = pipeline.report(con, market=market, query=query, min_score=min_score,
+                                 observation_offset=observation_offset, value_offset=value_offset, limit=limit)
+        return {**report, "fragments": fragments(report)}
     finally:
         con.close()
 
 
-@app.get("/api/themes")
-def api_themes():
-    con = connect()
-    try:
-        return pipeline.theme_table(con)
-    finally:
-        con.close()
+@app.get("/assets/{filename}")
+def asset(filename: str):
+    if filename not in ('dashboard.js', 'dashboard.css'):
+        raise HTTPException(404, 'Asset not found')
+    return FileResponse(Path(__file__).parent / filename)
 
 
 @app.get("/api/stocks")
 def api_stocks(market: str | None = Query(None, pattern=MARKET_PATTERN), limit: int = Query(50, ge=1, le=500)):
     con = connect()
     try:
-        return pipeline.stocks(con, market=market, limit=limit)
-    finally:
-        con.close()
-
-
-@app.get("/api/countries")
-def api_countries():
-    con = connect()
-    try:
-        return pipeline.country_table(con)
+        return [s for s in pipeline.stocks(con, market=market) if s.get("market") in pipeline.MARKETS][:limit]
     finally:
         con.close()
 
@@ -111,19 +109,9 @@ def api_stock(ticker: str):
     try:
         row = con.execute("SELECT day,data FROM stock_scores WHERE ticker=? ORDER BY day DESC LIMIT 1",
                           (ticker.upper(),)).fetchone()
-        if not row:
+        if not row or pipeline.market_of(ticker.upper()) not in pipeline.MARKETS:
             raise HTTPException(404, "Ticker not scored yet")
         return {"ticker": ticker.upper(), "day": row["day"], **pipeline.current_score(loads(row["data"], {}))}
-    finally:
-        con.close()
-
-
-@app.get("/api/macro")
-def api_macro():
-    con = connect()
-    try:
-        row = con.execute("SELECT day,data FROM macro ORDER BY day DESC LIMIT 1").fetchone()
-        return {"day": row["day"], **loads(row["data"], {})} if row else {}
     finally:
         con.close()
 
@@ -149,7 +137,7 @@ def api_news(theme: str | None = None, limit: int = Query(50, le=500)):
 
 
 @app.post("/api/run")
-def api_run(step: str = Query("all", pattern="^(news|official|score|all)$")):
+def api_run(step: str = Query("all", pattern="^(catalog|news|official|flows|signals|score|all)$")):
     if pipeline.STATUS["running"]:
         return {"started": False, "reason": "already running", **pipeline.STATUS}
     threading.Thread(target=pipeline.run, args=(step,), daemon=True).start()

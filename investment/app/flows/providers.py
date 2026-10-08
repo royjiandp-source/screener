@@ -15,8 +15,16 @@ def refresh_etf(con,item,ticker,info):
     holdings=[]
     try:
         df=ticker.funds_data.top_holdings
-        for code,r in df.iterrows():holdings.append({'ticker':str(code),'name':r.get('Name'),'weight':r.get('Holding Percent')})
-    except Exception:pass
+        from .collection import resolve_holding
+        for code,r in df.iterrows():
+            try:
+                weight=float(r.get('Holding Percent'))
+            except (TypeError,ValueError):
+                continue  # skip only this row
+            if not finite(weight) or not 0<=weight<=1:continue
+            resolved=resolve_holding(con,str(code)) or {}
+            holdings.append({'ticker':str(code),'name':r.get('Name'),'weight':weight,**resolved})
+    except Exception:pass  # fund holdings unavailable from the provider
     if holdings:save_flow(con,item['id'],'etf_holdings',stamp[:10],{'source':'Yahoo Finance fund holdings (auxiliary)','holdings':holdings,'coverage':'top_holdings_only','holdings_as_of':None,'note':'수집 시각은 실제 구성 기준일과 다릅니다.'})
     return {'status':'collected_partial','nav_status':'auxiliary_unverified_dates','holdings':len(holdings),'creation_flow':None}
 

@@ -3,13 +3,17 @@ import threading
 import uuid
 from ..db import connect,dumps,loads
 from ..filings.common import utc
-from .store import init,search
+from .store import init,search,SEARCH_MARKETS
 
 _worker_lock=threading.Lock()
 
 
 def create_job(con,listing_ids=None,search_query=None,market=None,idempotency_key=None,kind="valuation"):
     init(con)
+    if kind == 'market_valuation':
+        r=search(con,'',market,limit=1000000)
+        listing_ids=[x['id'] for x in r['items'] if x['type'] in ('stock','adr')]
+        search_query=None
     if search_query is not None:
         r=search(con,search_query,market,limit=1000000)
         listing_ids=[r['id'] for r in r['items']]
@@ -19,7 +23,9 @@ def create_job(con,listing_ids=None,search_query=None,market=None,idempotency_ke
     for lid in ids:
         row=con.execute('SELECT data FROM listings WHERE id=? AND active=1',(lid,)).fetchone()
         if not row: raise ValueError('현재 목록에서 확인되지 않은 종목입니다.')
-        items.append(loads(row[0],{}))
+        item=loads(row[0],{})
+        if item['market'] not in SEARCH_MARKETS:raise ValueError('지원하지 않는 시장입니다.')
+        items.append(item)
     if idempotency_key:
         old=con.execute('SELECT id FROM discovery_jobs WHERE id=?',(idempotency_key,)).fetchone()
         if old: return old[0]
@@ -68,7 +74,8 @@ def run_job(jid):
                 elif item['type'] not in ('stock','adr','reit'): result={'status':'special_model_required','source':item['source'],'ticker':item['ticker']}
                 elif market_of(item['ticker'])!=item['market']: result={'status':'unsupported_listing_identity','source':item['source'],'ticker':item['ticker']}
                 else:
-                    score_tickers(con,[item['ticker']])
+                    outcome=score_tickers(con,[item['ticker']])
+                    if (outcome or {}).get('failed'):raise ValueError('Financial refresh failed')
                     scored=con.execute('SELECT data FROM stock_scores WHERE ticker=? ORDER BY day DESC LIMIT 1',(item['ticker'],)).fetchone()
                     result={'status':'completed','source':item['source'],'ticker':item['ticker'],'analysis':loads(scored[0],{}) if scored else {}}
                 completed,failed=1,0

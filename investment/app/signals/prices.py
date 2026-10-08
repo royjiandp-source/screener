@@ -3,7 +3,7 @@ import pandas as pd
 from .leadership import relative_strength
 
 # Investable broad-market proxies: both series include dividend/split adjustments.
-BENCHMARKS={'KR':'069500.KS','US':'SPY','JP':'1306.T','TW':'0050.TW','HK':'2800.HK','SG':'ES3.SI'}
+BENCHMARKS={'KR':'069500.KS','US':'SPY','SG':'ES3.SI'}
 
 
 def price_signals(asset,benchmark):
@@ -12,7 +12,9 @@ def price_signals(asset,benchmark):
     merged=pd.concat([asset['Close'].rename('asset'),benchmark['Close'].rename('benchmark')],axis=1,sort=True).dropna().sort_index()
     merged=merged[~merged.index.duplicated(keep='last')]
     for label,period in [('rs_3m',63),('rs_6m',126),('rs_12m',252)]:
-        if len(merged)>period:out[label]=relative_strength(merged['asset'].iloc[-period-1:].tolist(),merged['benchmark'].iloc[-period-1:].tolist())
+        if len(merged)>period:
+            out[label]=relative_strength(merged['asset'].iloc[-period-1:].tolist(),merged['benchmark'].iloc[-period-1:].tolist())
+            out['return_'+label[3:]]=(float(merged['asset'].iloc[-1])/float(merged['asset'].iloc[-period-1])-1)*100
     if 'Volume' in asset and len(asset)>=63:
         value=(asset['Close']*asset['Volume']).dropna()
         out['turnover_20d']=float(value.iloc[-20:].mean())

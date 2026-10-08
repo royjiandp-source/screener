@@ -53,9 +53,9 @@ def test_missing_data_and_special_industries_are_not_candidates():
 
 def test_country_mapping_does_not_guess_unknown_listings():
     from app.pipeline import market_of
-    assert market_of("7203.T") == "JP"
-    assert market_of("2330.TW") == "TW"
-    assert market_of("0700.HK") == "HK"
+    assert market_of("7203.T") == "UNKNOWN"      # JP/TW/HK are no longer supported
+    assert market_of("0700.HK") == "UNKNOWN"
+    assert market_of("D05.SI") == "SG"
     assert market_of("TSM") == "US"
     assert market_of("FOO.UNKNOWN") == "UNKNOWN"
 
@@ -80,14 +80,13 @@ def test_country_api_and_empty_dashboard(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
     from app.main import app
     c = TestClient(app)
-    countries = c.get("/api/countries").json()
-    assert set(countries) == {"KR", "US", "JP", "TW", "HK", "SG"}
-    assert countries["JP"]["analyzed"] == 0
-    assert c.get("/api/stocks?market=ZZ").status_code == 422
-    assert c.get("/api/stocks?limit=0").status_code == 422
-    page = c.get("/?market=JP")
-    assert page.status_code == 200 and '국가별 가치투자' in page.text
-    assert '일본' in page.text and '미수집' in page.text
+    assert c.get('/api/countries').status_code==404
+    assert set(c.get('/api/report').json()['coverage'])=={'KR','SG','US'}
+    assert c.get('/api/stocks?market=ZZ').status_code==422
+    assert c.get('/api/stocks?limit=0').status_code==422
+    assert c.get('/?market=JP').status_code==422
+    page=c.get('/?market=KR')
+    assert page.status_code==200 and '전체 목록 미확보' in page.text
 
 
 def test_fcff_uses_aligned_years_and_does_not_fill_missing_zero():
@@ -102,65 +101,55 @@ def test_fcff_uses_aligned_years_and_does_not_fill_missing_zero():
                                    {"period_end": "2025-12-31", "fcff": 65.0}]
 
 
-def test_pipeline_scores_universe_without_theme_membership(tmp_path, monkeypatch):
-    import json
+def test_pipeline_scores_catalog_without_theme_membership(tmp_path, monkeypatch):
     from app import pipeline
-    monkeypatch.setenv("INVEST_DB", str(tmp_path / "u.db"))
-    universe = tmp_path / "universe.json"
-    universe.write_text(json.dumps({"markets": {"JP": ["7203.T"]}}))
-    monkeypatch.setenv("INVEST_UNIVERSE", str(universe))
-    monkeypatch.setattr(pipeline, "get_macro", lambda con: {})
-    monkeypatch.setattr(pipeline, "get_financials", lambda con, tickers: {"7203.T": {"price": 10}})
-    con = pipeline.connect()
-    pipeline.run_score(con, markets=("JP",))
-    stocks = pipeline.stocks(con, market="JP")
-    assert stocks[0]["ticker"] == "7203.T"
-    assert stocks[0]["analysis_status"] == "data_insufficient"
-    assert stocks[0]["total"] is None
-    assert pipeline.report(con)["countries"]["JP"]["analyzed"] == 1
-    assert pipeline.report(con)["top_stocks"] == []
+    from app.discovery.providers import listing
+    from app.discovery.store import replace_catalog
+    monkeypatch.setenv('INVEST_DB',str(tmp_path/'u.db'))
+    monkeypatch.setattr(pipeline,'get_financials',lambda c,ts:{'999999.KS':{'price':10}})
+    con=pipeline.connect()
+    replace_catalog(con,'KR',[listing('KR','KOSPI','999999','Unclassified company')],'Exchange','2026-10-01T00:00:00Z',True)
+    pipeline.run_score(con,markets=('KR',))
+    stocks=pipeline.stocks(con,market='KR')
+    assert stocks[0]['analysis_status']=='data_insufficient' and stocks[0]['total'] is None
+    assert pipeline.report(con)['value_candidates']['total']==0
     con.close()
 
 
 def test_partial_market_run_preserves_other_countries(tmp_path, monkeypatch):
-    import json
     from app import pipeline
     from app.db import dumps
-    monkeypatch.setenv("INVEST_DB", str(tmp_path / "partial.db"))
-    universe = tmp_path / "universe.json"
-    universe.write_text(json.dumps({"markets": {"JP": ["7203.T"]}}))
-    monkeypatch.setenv("INVEST_UNIVERSE", str(universe))
-    monkeypatch.setattr(pipeline, "get_macro", lambda con: {})
-    monkeypatch.setattr(pipeline, "get_financials", lambda con, tickers: {})
-    con = pipeline.connect()
-    con.execute("INSERT INTO stock_scores VALUES(?,?,?,?,?)", (pipeline.today(), "AAPL", "US", None,
-                 dumps({"market": "US", "metrics": {}, "score_version": "value-v1", "total": None})))
+    from app.discovery.providers import listing
+    from app.discovery.store import replace_catalog
+    monkeypatch.setenv('INVEST_DB',str(tmp_path/'partial.db'))
+    monkeypatch.setattr(pipeline,'get_financials',lambda c,ts:{})
+    con=pipeline.connect()
+    for t,market in [('AAPL','US'),('D05.SI','SG')]:
+        con.execute('INSERT INTO stock_scores VALUES(?,?,?,?,?)',(pipeline.today(),t,market,None,dumps({'market':market,'score_version':'value-v1','total':None,'metrics':{}})))
     con.commit()
-    pipeline.run_score(con, markets=("JP",))
-    assert pipeline.stocks(con, market="US")[0]["ticker"] == "AAPL"
+    replace_catalog(con,'KR',[listing('KR','KOSPI','999999','Example')],'Exchange','2026-10-01T00:00:00Z',True)
+    pipeline.run_score(con,markets=('KR',))
+    assert pipeline.stocks(con,market='US')[0]['ticker']=='AAPL'
+    assert pipeline.stocks(con,market='SG')[0]['ticker']=='D05.SI'
     con.close()
 
 
-def test_positive_valuation_is_exposed_in_country_report(tmp_path, monkeypatch):
-    import json
+def test_positive_valuation_is_exposed_in_catalog_report(tmp_path,monkeypatch):
     from app import pipeline
-    monkeypatch.setenv("INVEST_DB", str(tmp_path / "rank.db"))
-    universe = tmp_path / "universe.json"
-    universe.write_text(json.dumps({"markets": {"JP": ["7203.T"]}}))
-    monkeypatch.setenv("INVEST_UNIVERSE", str(universe))
-    monkeypatch.setattr(pipeline, "get_macro", lambda con: {})
-    metrics = {"ticker": "7203.T", "normalized_fcf": 100, "shares": 10,
-               "cashflow_type": "FCFF", "net_debt": 0, "discount_rate": 10,
-               "terminal_growth": 2, "currency": "JPY", "financial_currency": "JPY",
-               "price": 50, "fcf": 100, "ocf": 120}
-    monkeypatch.setattr(pipeline, "get_financials", lambda con, tickers: {"7203.T": metrics})
-    con = pipeline.connect()
-    pipeline.run_score(con, markets=("JP",))
-    result = pipeline.report(con, market="JP")
-    assert result["top_stocks"][0]["valuation"]["status"] == "estimated"
-    assert result["countries"]["JP"]["candidates"] == 1
+    from app.discovery.providers import listing
+    from app.discovery.store import replace_catalog
     from app.web import render
-    assert "conservative" in render(result) and "안전마진" in render(result)
+    monkeypatch.setenv('INVEST_DB',str(tmp_path/'rank.db'))
+    metrics={'ticker':'EXAMPLE','normalized_fcf':100,'shares':10,'cashflow_type':'FCFF','net_debt':0,
+             'discount_rate':10,'terminal_growth':2,'currency':'USD','financial_currency':'USD',
+             'price':50,'fcf':100,'ocf':120}
+    monkeypatch.setattr(pipeline,'get_financials',lambda c,ts:{'EXAMPLE':metrics})
+    con=pipeline.connect()
+    replace_catalog(con,'US',[listing('US','NASDAQ','EXAMPLE','Example')],'Exchange','2026-10-01T00:00:00Z',True)
+    pipeline.run_score(con,markets=('US',))
+    result=pipeline.report(con,market='US',min_score=0)
+    assert result['value_candidates']['items'][0]['analysis']['valuation']['status']=='estimated'
+    assert '보수적' in render(result) and '안전마진' in render(result)
     con.close()
 
 
@@ -231,3 +220,12 @@ def test_reverse_dcf_recovers_price_implied_growth():
     assert valuation.reverse_dcf(100, 10, 1e9)["status"] == "outside_search_range"
     with pytest.raises(ValueError):
         valuation.reverse_dcf(100, 10, -1)
+
+
+def test_dashboard_uses_relative_paths_and_konex_is_excluded():
+    from pathlib import Path
+    import inspect
+    from app.discovery import providers
+    js = (Path(__file__).resolve().parents[1] / 'app' / 'dashboard.js').read_text()
+    assert "'/api/" not in js and "'api/report?" in js
+    assert "konexMkt" not in inspect.getsource(providers.fetch_catalog)

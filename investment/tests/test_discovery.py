@@ -160,13 +160,6 @@ def test_duplicate_source_rows_same_identity():
     with pytest.raises(ValueError):deduplicate([row(),{**row(),'name':'Different issuer'}])
 
 
-def test_hk_currency_and_instrument_type():
-    import pandas as pd
-    from app.discovery.providers import parse_hkex
-    rows=parse_hkex(pd.DataFrame([{'Stock Code':'00005','Name of Securities':'HSBC','Category':'Equity','Sub-Category':'Equity Securities','Trading Currency':'HKD'},{'Stock Code':'02800','Name of Securities':'Fund','Category':'Exchange Traded Products','Sub-Category':'Exchange Traded Funds','Trading Currency':'HKD'}]))
-    assert rows[0]['ticker']=='0005.HK'
-    assert rows[1]['type']=='etf'
-
 
 def test_sec_reporting_dates():
     from app.flows.sec13f import reporting_date
@@ -261,6 +254,6 @@ def test_discovery_rejects_foreign_origin_and_oversize(con,monkeypatch):
 def test_relative_strength_uses_adjusted_fund_benchmarks():
     from app.signals.prices import BENCHMARKS,price_signals
     import pandas as pd
-    assert BENCHMARKS=={'KR':'069500.KS','US':'SPY','JP':'1306.T','TW':'0050.TW','HK':'2800.HK','SG':'ES3.SI'}
+    assert BENCHMARKS=={'KR':'069500.KS','US':'SPY','SG':'ES3.SI'}
     frame=pd.DataFrame({'Close':[100.0]*254},index=pd.date_range('2025-01-01',periods=254))
     assert price_signals(frame,frame)['return_basis']=='dividend_and_split_adjusted_fund_proxy'

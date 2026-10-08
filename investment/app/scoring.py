@@ -1,6 +1,6 @@
 """Risk engine + 100-point scoring engine. / 리스크 엔진 + 100점 스코어링.
 
-Financial health 30 | Growth 20 | Valuation 20 | Theme momentum 15 | Macro 10 | Risk 5
+Value score: valuation 35 | quality 25 | financial 20 | allocation 10 | growth 10
 Missing data: a category is scored on the metrics that exist; if none exist it gets half points.
 """
 
@@ -63,15 +63,6 @@ def theme_score(tm: dict, max_count: int, flow) -> float:  # 15
     return round(15 * (0.4 * count + 0.4 * max(0.0, pos) + 0.2 * f), 2)
 
 
-def macro_score(theme: str, cycle: str, cycles: dict) -> float:  # 10
-    if cycle not in cycles:
-        return 5.0
-    if theme in cycles[cycle]:
-        return 10.0
-    favored_elsewhere = any(theme in v for k, v in cycles.items() if k not in (cycle, "_note"))
-    return 4.0 if favored_elsewhere else 6.0
-
-
 def risk(m: dict, theme_cfg: dict, risk_cfg: dict, theme_tm: dict) -> dict:  # 5
     flags = []
     c = (m.get("country") or "").strip()
@@ -112,24 +103,6 @@ def is_avoid(m: dict, rk: dict) -> list:
 def is_value_pick(m: dict) -> bool:
     per, roe, fy = m.get("per"), m.get("roe"), m.get("fcf_yield")
     return bool(per and 0 < per <= 18 and roe and roe >= 15 and fy and fy >= 4)
-
-
-def score_stock(m, theme, theme_cfg, tm_all, max_count, flow, cycle, cycles, risk_cfg) -> dict:
-    fin, fin_cov = financial_health(m)
-    gro, gro_cov = growth(m)
-    val, val_cov = valuation(m)
-    th = theme_score(tm_all.get(theme), max_count, flow)
-    mac = macro_score(theme, cycle, cycles)
-    rk = risk(m, theme_cfg, risk_cfg, tm_all.get(theme))
-    total = fin + gro + val + th + mac + rk["score"]
-    return {
-        "total": round(total, 1),
-        "parts": {"financial": round(fin, 1), "growth": round(gro, 1), "valuation": round(val, 1),
-                  "theme": round(th, 1), "macro": round(mac, 1), "risk": rk["score"]},
-        "coverage": round((fin_cov + gro_cov + val_cov) / 3, 2),
-        "risk": rk["label"], "risk_flags": rk["flags"],
-        "avoid": is_avoid(m, rk), "value_pick": is_value_pick(m),
-    }
 
 
 def value_score(m):

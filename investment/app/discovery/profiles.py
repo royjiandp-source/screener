@@ -48,8 +48,19 @@ def enrich_listing(con,lid):
     if revenue and revenue[1]>0:trends['revenue_change']=revenue[0]/revenue[1]-1
     if revenue and op and revenue[2:]==op[2:] and revenue[0]>0 and revenue[1]>0:trends['margin_change']=op[0]/revenue[0]-op[1]/revenue[1]
     if cash and revenue and cash[2:]==revenue[2:] and cash[1]>0:trends['cashflow_change']=cash[0]/cash[1]-1
-    data={'signals':signals,'trends':trends,'market':item['market'],'source':'Yahoo Finance adjusted prices / annual statements','benchmark':BENCHMARKS[item['market']],'ticker':item['ticker'],'period':signals.get('as_of'),'status':'collected'}
+    periods={k:{'current':r[2],'previous':r[3]} for k,r in [('revenue',revenue),('operating_income',op),('cashflow',cash)] if r}
+    data={'signals':signals,'trends':trends,'financial_periods':periods,'market':item['market'],'source':'Yahoo Finance adjusted prices / annual statements','benchmark':BENCHMARKS[item['market']],'ticker':item['ticker'],'period':signals.get('as_of'),'status':'collected'}
     save_flow(con,lid,'leadership',signals.get('as_of') or utc()[:10],data)
+    from ..flows.demand import collect_inventory
+    try:
+        data['demand_collection']=collect_inventory(con,item,ticker,info)
+    except Exception as exc:
+        data['demand_collection']={'status':'failed','reason':type(exc).__name__}
+    from ..flows.collection import refresh_holders
+    try:
+        data['institution_collection']=refresh_holders(con,item,ticker,info)
+    except Exception as exc:
+        data['institution_collection']={'status':'failed','reason':type(exc).__name__}
     return data
 
 

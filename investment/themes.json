@@ -80,13 +80,6 @@
       "industry_risks": ["rates", "regulation"]
     }
   },
-  "cycles": {
-    "_note": "Which themes each economic phase favors (from the design doc). / 경기 국면별 유리한 테마",
-    "Recovery":  ["Semiconductor", "Power Infrastructure", "EV", "Renewable Energy"],
-    "Expansion": ["AI Infrastructure", "Cloud", "Cyber Security", "Data Center", "Fintech"],
-    "Slowdown":  ["Healthcare", "Defense", "Nuclear", "Banking"],
-    "Recession": ["Healthcare", "Banking", "Nuclear"]
-  },
   "risk": {
     "country": ["China", "Russia", "Taiwan", "Hong Kong"],
     "geopolitical": ["Taiwan", "Israel", "Ukraine", "Russia", "Iran", "Saudi Arabia"]

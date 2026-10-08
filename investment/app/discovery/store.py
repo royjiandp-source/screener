@@ -2,7 +2,7 @@
 import hashlib
 import re
 from ..db import dumps, loads, load_themes
-from ..countries import COUNTRIES
+from ..countries import COUNTRIES, SEARCH_MARKETS
 from ..filings.common import utc
 
 SCHEMA='''
@@ -43,8 +43,8 @@ def replace_catalog(con,market,rows,source,observed_at,complete):
             new={r['id'] for r in rows}
             for lid in set(active)-new:con.execute('INSERT INTO listing_events(listing_id,event,observed_at) VALUES(?,?,?)',(lid,'absent_from_latest_catalog',observed_at))
             con.execute('UPDATE listings SET active=0 WHERE market=?',(market,))
-            for r in rows:
-                con.execute('INSERT OR REPLACE INTO listings VALUES(?,?,?,?,1,?)',(r['id'],market,r['ticker'],dumps({**r,'source':source,'observed_at':observed_at}),sid))
+        for r in rows:
+            con.execute('INSERT OR REPLACE INTO listings VALUES(?,?,?,?,1,?)',(r['id'],market,r['ticker'],dumps({**r,'source':source,'observed_at':observed_at}),sid))
     return sid
 
 
@@ -58,7 +58,6 @@ def classify(con,listing_id,label,kind,source,evidence,available_at):
         con.execute('INSERT OR REPLACE INTO classifications VALUES(?,?,?,?,?,?)',(listing_id,label,kind,source,evidence,utc(available_at)))
 
 
-SEARCH_MARKETS=("KR", "US", "SG")
 
 def search(con,query,market=None,offset=0,limit=50):
     init(con)
@@ -75,13 +74,16 @@ def search(con,query,market=None,offset=0,limit=50):
     labels={label for label,m in themes.items() if q and any(matches(t) for t in [label,*m.get('keywords',[]),*m.get('industries',[])])}
     # Search cached evidence, not arbitrary company name alone for thematic membership.
     records=con.execute("SELECT * FROM listings WHERE active=1 AND market IN ('KR','US','SG')"+(' AND market=?' if market else ''),(market,) if market else ()).fetchall()
+    evidence_by_id={}
+    for e in con.execute("SELECT c.* FROM classifications c JOIN listings l ON l.id=c.listing_id WHERE l.active=1 AND l.market IN ('KR','US','SG')"):
+        evidence_by_id.setdefault(e['listing_id'],[]).append({k:e[k] for k in ('label','kind','source','evidence','available_at')})
     found=[]; classified=0
     for row in records:
         r=loads(row['data'],{})
-        evidence=[dict(e) for e in con.execute('SELECT label,kind,source,evidence,available_at FROM classifications WHERE listing_id=?',(row['id'],))]
+        evidence=evidence_by_id.get(row['id'],[])
         if evidence: classified+=1
         if not q or q == r['ticker'].casefold() or matches(r['name']) or any(e['label'] in labels or matches(e['label']) or matches(e['evidence']) for e in evidence):
-            found.append({**r,'evidence':evidence})
+            found.append({**r,'evidence':evidence,'matched_labels':[e['label'] for e in evidence if q and (e['label'] in labels or matches(e['label']) or matches(e['evidence']))]})
     snapshots={r['market']:r['id'] for r in con.execute('SELECT id,market FROM catalog_snapshots WHERE active=1')}
     return {'items':found[offset:offset+limit],'total':len(found),'classified':classified,'total_listings':len(records),'catalog_snapshots':snapshots,'status':'available' if records else 'not_collected'}
 

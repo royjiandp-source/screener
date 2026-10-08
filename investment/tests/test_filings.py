@@ -149,8 +149,10 @@ def test_conflicting_official_data_moves_stock_to_review(filing_db, monkeypatch,
          "discount_rate": 10, "terminal_growth": 2, "currency": "USD", "financial_currency": "USD",
          "price": 50, "cash": 200, "statement_scope": "consolidated",
          "field_periods": {"cash": "2025-12-31"}}
-    monkeypatch.setattr(pipeline, "get_macro", lambda con: {})
     monkeypatch.setattr(pipeline, "get_financials", lambda con, tickers: {"AAPL": m})
+    from app.discovery.store import replace_catalog
+    from app.discovery.providers import listing
+    replace_catalog(filing_db,"US",[listing("US","NASDAQ","AAPL","Apple")],"Exchange","2026-10-01T00:00:00Z",True)
     pipeline.run_score(filing_db, markets=("US",))
     s = pipeline.stocks(filing_db)[0]
     assert s["analysis_status"] == "review_required"
@@ -174,14 +176,13 @@ def test_new_financial_schema_is_cached_once(filing_db, monkeypatch):
 def test_country_report_retains_different_refresh_days(filing_db):
     from app import pipeline
     from app.db import dumps
-    for ticker, market, day in [("AAPL", "US", "2026-10-05"), ("7203.T", "JP", "2026-10-06")]:
+    for ticker, market, day in [("AAPL", "US", "2026-10-05"), ("D05.SI", "SG", "2026-10-06")]:
         filing_db.execute("INSERT INTO stock_scores VALUES(?,?,?,?,?)", (day, ticker, market, None,
              dumps({"market": market, "metrics": {}, "score_version": "value-v1", "total": None})))
     filing_db.commit()
     assert pipeline.stocks(filing_db, market="US")[0]["day"] == "2026-10-05"
-    countries = pipeline.report(filing_db)["countries"]
-    assert countries["US"]["analyzed"] == 1
-    assert countries["JP"]["analyzed"] == 1
+    assert pipeline.stocks(filing_db, market="SG")[0]["day"] == "2026-10-06"
+    assert "countries" not in pipeline.report(filing_db)
 
 
 def test_total_ifrs_equity_is_not_compared_with_parent_equity(filing_db):
@@ -206,16 +207,14 @@ def test_cash_with_investments_is_not_compared_to_cash_only(filing_db):
     assert verify_metrics(filing_db, "AAPL", m)["status"] == "not_comparable"
 
 
-def test_country_shows_collected_filings_without_valuation(filing_db):
-    from app.filings.store import save_snapshot
+def test_filings_remain_accessible_without_country_value_summary(filing_db):
+    from app.filings.store import save_snapshot, history
     from app.filings.sec import parse_facts
-    from app.pipeline import country_table, report
+    from app.pipeline import report
     from app.web import render
-    data = sec_data()
-    save_snapshot(filing_db, '005930.KS', 'KR', 'DART', data, parse_facts(data))
-    country = country_table(filing_db, [])['KR']
-    assert country['data_status'] == '공시 수집됨 · 가치평가 미실행'
-    assert country['official_facts'] == 2
-    page = render(report(filing_db, market='KR'))
-    assert '재무 항목 2개' in page
-    assert '공식 공시 검증 전' not in page
+    data=sec_data()
+    save_snapshot(filing_db,'005930.KS','KR','DART',data,parse_facts(data))
+    assert filing_db.execute('SELECT COUNT(*) FROM filing_facts').fetchone()[0]==2
+    page=render(report(filing_db,market='KR'))
+    assert '국가별 가치투자' not in page
+    assert filing_db.execute('SELECT COUNT(*) FROM filing_snapshots').fetchone()[0]==1
