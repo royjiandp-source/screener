@@ -8,6 +8,7 @@ from .discovery.store import init, search, health
 from .filings.common import utc
 from .signals.leadership import leadership
 from .valuation import finite
+from .research import price_levels
 
 CORPORATE_TYPES = ('stock', 'adr')
 ADJUSTED = 'dividend_and_split_adjusted_fund_proxy'
@@ -75,7 +76,7 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
     for item in corporations:
         a = analyses.get((item['market'], item['ticker']), {})
         if a.get('score_version') == 'value-v1' and a.get('analysis_status') == 'analyzable' and finite(a.get('total')) and a['total'] >= min_score:
-            values.append({'listing': item, 'analysis': a})
+            values.append({'listing': item, 'analysis': a, 'price_1m':observations[item['id']][1].get('price_1m'), 'research':latest.get((item['id'],'research_opinions'),{}).get('data',{}), 'price_levels':price_levels(a,latest.get((item['id'],'research_opinions'),{}).get('data',{}))})
     values.sort(key=lambda r: (-r['analysis']['total'], r['listing']['market'], r['listing']['code']))
 
     fund_by_ticker = defaultdict(list)
@@ -150,6 +151,7 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
             'strength':{'status':signal_status([signals.get('rs_3m'),signals.get('rs_6m')]), 'signals':signals, 'benchmark':data.get('benchmark'), 'as_of':date},
             'breadth':breadth,
             'price':{'status':'unknown' if not finite(base.get('safety_margin')) else 'improving' if base['safety_margin']>=20 else 'weakening' if base['safety_margin']<0 else 'mixed',
+                     'missing_reason':valuation.get('status') or analysis.get('analysis_status') or 'not_collected',
                      'safety_margin':base.get('safety_margin'), 'reverse_dcf':valuation.get('reverse_dcf'), 'analysis_day':analysis.get('day')},
         }
         links = [r for r in records[lid] if r['kind'] in ('institution_trades','institution_holdings')]
@@ -162,7 +164,7 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
                 rec = latest.get((fund['id'],kind))
                 if rec:
                     links.append({**rec, 'fund':fund['ticker'], 'weight':weight, 'relation':'holdings' if weight is not None else 'sector'})
-        rows.append({'listing':item, 'sector':sector, 'checks':checks, 'leadership':observed, 'analysis':analysis, 'etf_institution':links})
+        rows.append({'research':latest.get((lid,'research_opinions'),{}).get('data',{}),'price_levels':price_levels(analysis,latest.get((lid,'research_opinions'),{}).get('data',{})), 'listing':item, 'sector':sector, 'checks':checks, 'leadership':observed, 'analysis':analysis, 'etf_institution':links})
     rows.sort(key=lambda r: (-(r['leadership']['score'] if finite(r['leadership']['score']) else -1), -len(r['etf_institution']), r['listing']['market'],r['listing']['code']))
     source_health = health(con)
     coverage = {}

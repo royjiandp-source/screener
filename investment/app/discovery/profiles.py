@@ -61,6 +61,11 @@ def enrich_listing(con,lid):
         data['institution_collection']=refresh_holders(con,item,ticker,info)
     except Exception as exc:
         data['institution_collection']={'status':'failed','reason':type(exc).__name__}
+    from ..research import collect_research
+    try:
+        data['research_collection']=collect_research(con,item,ticker,info)
+    except Exception as exc:
+        data['research_collection']={'status':'failed','reason':type(exc).__name__}
     return data
 
 

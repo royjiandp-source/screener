@@ -5,6 +5,7 @@ from pathlib import Path
 from .countries import COUNTRIES, SEARCH_MARKETS
 from .discovery.ui import controls
 from .valuation import finite
+from .research import public_reports
 
 E = lambda value: html.escape('' if value is None else str(value), quote=True)
 STATUS = {'unknown':'미확인','improving':'개선','mixed':'혼재','weakening':'악화'}
@@ -49,11 +50,42 @@ def evidence_detail(row):
     return out
 
 
+def monthly_chart(data):
+    if not data or len(data.get('points',[]))<2:
+        return '<small class="monthly-missing">1개월 주가 자료 미수집</small>'
+    points=data['points'];prices=[p['close'] for p in points]
+    if not all(finite(v) and v>0 for v in prices):return '<small>1개월 주가 자료 부족</small>'
+    lo,hi=min(prices),max(prices);span=hi-lo or 1
+    coords=' '.join(f'{4+i*152/(len(prices)-1):.1f},{36-(v-lo)*30/span:.1f}' for i,v in enumerate(prices))
+    change=data.get('return_pct');color='#b42318' if finite(change) and change>=0 else '#175cd3'
+    label=f"최근 1개월 {number(change,'%')} · {data.get('start')} → {data.get('end')} · 배당·분할 조정 종가"
+    return f'<div class="monthly-chart"><svg viewBox="0 0 160 40" width="160" height="40" role="img" aria-label="{E(label)}"><title>{E(label)}</title><polyline points="{coords}" fill="none" stroke="{color}" stroke-width="2"/></svg><small>최근 1개월 {number(change,"%")}'+(' · 기간 부족' if data.get('partial') else '')+f'<br>{E(data.get("start"))} → {E(data.get("end"))}<br>배당·분할 조정 종가 · Yahoo Finance</small></div>'
+
+
+def research_detail(row):
+    research=row.get('research',{});p=row.get('price_levels',{});currency=E(p.get('currency') or '')
+    prices=f'<div class="price-levels"><small>현재가 {number(p.get("current"))} {currency}<br>매수 검토가 {number(p.get("buy_review"))} {currency}<br>매도 검토가 {number(p.get("sell_review"))} {currency}<br>안전마진 20% / 기준 내재가치 · 평가일 {E(p.get("valuation_day") or "미수집")}<br>자료 수집 {E(p.get("quote_observed") or "미수집")}</small></div>'
+    summary=f'<summary>투자회사 의견·목표주가 ({len(research.get("opinions",[]))}건)</summary><p>평균 목표가 {number(p.get("target_mean"))} {currency} · 하단/상단 {number(p.get("target_low"))} / {number(p.get("target_high"))} · 분석가 {E(research.get("analysts") or "미확인")}명</p>'
+    grades={'Buy':'매수','Hold':'보유','Sell':'매도','Strong Buy':'적극 매수','Outperform':'시장수익률 상회','Overweight':'비중 확대','Neutral':'중립','Underperform':'시장수익률 하회','Underweight':'비중 축소'}
+    lines=[]
+    for r in research.get('opinions',[]):
+        lines.append(f'<p>{E(r["date"])} · {E(r["firm"])} · {E(grades.get(r.get("previous_rating"),r.get("previous_rating")))} → {E(grades.get(r.get("rating"),r.get("rating")))}<br>목표가 {number(r.get("target_previous"))} → {number(r.get("target_current"))} {currency}</p>')
+    for report in public_reports(row['listing']['ticker']):
+        url=report['url']
+        if url.startswith('https://'):
+            lines.append(f'<p><a href="{E(url)}" target="_blank" rel="noopener">공개 원문 · {E(report["publisher"])} · {E(report["title"])}</a><small>{E(report.get("date") or "발행일 미확인")} · 참고 원문 (최신 목표가 산정에 사용하지 않음)</small></p>')
+    for key,label in [('source','목표주가 출처'),('opinion_source','공개 의견 출처')]:
+        url=research.get(key,'')
+        if url.startswith('https://'):lines.append(f'<a href="{E(url)}" target="_blank" rel="noopener">{E(label)}</a> ')
+    return prices+'<details class="research">'+summary+''.join(lines)+'<small>매매 검토 가격은 가치평가 계산 기준이며 예상 체결가가 아닙니다. 공개 의견은 보조 제공처 요약으로 리포트 원문·논거·목표 기간은 미확인입니다.</small></details>'
+
+
 def name_cell(row, static):
     item=row['listing']
     detail=evidence_detail(row)
+    chart=monthly_chart(row.get('price_1m') or row.get('checks',{}).get('strength',{}).get('signals',{}).get('price_1m'))
     action='' if static else f'<button class="text-button" type="button" data-detail="{E(item["id"])}">관찰·기관 상세</button>'
-    return f'<details class="company"><summary><strong>{E(item["name"])}</strong><small>{E(item["ticker"])}</small></summary>{detail}{action}</details>'
+    return f'<details class="company"><summary><strong>{E(item["name"])}</strong><small>{E(item["ticker"])}</small></summary>{detail}{action}</details>{chart}{research_detail(row)}'
 
 
 def flow_summary(records):
@@ -88,15 +120,17 @@ def observation_rows(report, static=False):
         profits=f"매출 {pct(t.get('revenue_change'))}<br>이익률 {number(t.get('margin_change')*100 if t.get('margin_change') is not None else None,'%p')}<br>영업현금흐름 {pct(t.get('cashflow_change'))}"
         periods=c['profits'].get('periods',{})
         period_text=' · '.join(f"{v['previous']} → {v['current']}" for v in periods.values())
-        estimates=f"이익 전망 {pct(e['change'])}<br>{E(e.get('forecast_period') or '전망 자료 없음')}<small>섹터 상향 {pct(e['upward_ratio'])} · {e['sample']}개</small>"
+        estimates=f"이익 전망 {pct(e['change'])}<br>{E(e.get('forecast_period') or '동일 실적기간의 컨센서스 비교 자료 미연결')}<small>섹터 상향 {pct(e['upward_ratio'])} · {e['sample']}개</small>"
         strength=f"3개월 {number(s.get('rs_3m'),'%')}<br>6개월 {number(s.get('rs_6m'),'%')}<small>조정 수익률 비율 비교 · {E(c['strength'].get('benchmark') or '비교 자료 없음')}<br>{E(c['strength'].get('as_of') or '')}</small>"
         breadth=f"강세 3개월 {pct(b['strong_3m'])} · {b['sample_3m']}/{b['total_members']}개<br>강세 6개월 {pct(b['strong_6m'])} · {b['sample_6m']}/{b['total_members']}개<small>상승 3/6개월 {pct(b['rising_3m'])} / {pct(b['rising_6m'])}</small>"
+        reasons={'invalid_assumptions':'평가 가정 범위 검토 필요','special_model_required':'업종별 별도 평가모델 필요','share_basis_unverified':'ADR·복수 상장 주식 수 검증 필요','not_collected':'가치평가 자료 미수집','estimated':'안전마진 계산 자료 부족','data_insufficient':'비교 재무자료 부족'}
+        price_reason=reasons.get(p.get('missing_reason'),'가치평가 입력 자료 확인 필요') if not finite(p['safety_margin']) else ''
         price=f"안전마진 {number(p['safety_margin'],'%')}<small>분석일 {E(p.get('analysis_day') or '미수집')}<br>내재 성장률 {number((p.get('reverse_dcf') or {}).get('implied_growth'),'%')}</small>"
         row=[selection, E(COUNTRIES[item['market']]['name']), E(r['sector']), name_cell(r,static),flow_summary(r['etf_institution']),
              badge(c['demand'])+('<small>부분 확인 · 재고 신호</small>' if c['demand'].get('coverage')=='inventory_only' else '')+f'<small>{E(demand)}<br>{E(c["demand"].get("note"))}<br>{E(c["demand"].get("source"))} {E(c["demand"].get("as_of"))}</small>',
              badge(c['profits'])+'<div>'+profits+f'<small>{E(period_text)}</small></div>',
              badge(e)+'<div>'+estimates+f'<small>{E(e.get("source"))} {E(e.get("as_of"))}</small></div>',
-             badge(c['strength'])+'<div>'+strength+'</div>',badge(b)+'<div>'+breadth+'</div>',badge(p)+'<div>'+price+'</div>',
+             badge(c['strength'])+'<div>'+strength+'</div>',badge(b)+'<div>'+breadth+'</div>',badge(p)+'<div>'+price+('<small>'+E(price_reason)+'</small>' if price_reason else '')+'</div>',
              '<strong>'+number(r['leadership']['score'])+'</strong><small>상대강도 40 · 실적 40 · 유동성 20</small>']
         rows.append('<tr>'+''.join('<td>'+value+'</td>' for value in row)+'</tr>')
     return ''.join(rows) or '<tr><td colspan="12" class="empty">검색 결과가 없습니다. 목록·분류 자료를 수집하거나 다른 검색어를 입력하세요.</td></tr>'

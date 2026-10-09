@@ -1,0 +1,11 @@
+{
+  "AAPL": [
+    {"publisher":"DBS Group Research","date":"2025-03-12","title":"US Equity Research · Apple","url":"https://www.dbs.com/content/article/pdf/CIO/2025/202503/250312EQW.pdf","coverage":"historical_public_report"}
+  ],
+  "NVDA": [
+    {"publisher":"DBS CIO","date":"2025-06-12","title":"Nvidia · Long-term structural growth","url":"https://www.dbs.com/content/article/pdf/CIO/2025/202506/250612CIOP2.pdf","coverage":"historical_public_report"}
+  ],
+  "005930.KS": [
+    {"publisher":"미래에셋증권","date":null,"title":"삼성전자 기업 분석","url":"https://securities.miraeasset.com/bbs/download/2144354.pdf?attachmentId=2144354","coverage":"public_report_date_unverified"}
+  ]
+}
