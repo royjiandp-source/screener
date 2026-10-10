@@ -1,0 +1,1055 @@
+- main [ref=f6e2]:
+  - generic [ref=f6e3]:
+    - paragraph [ref=f6e4]: KR / SG / US · INVESTMENT SCREENER
+    - heading "섹터의 변화에서, 기업의 가치까지" [level=1] [ref=f6e5]
+    - paragraph [ref=f6e6]: 자금·실적·가격의 근거로 후보를 좁히고, 전체 상장 목록에서 가치 점수가 높은 기업을 확인합니다.
+  - paragraph [ref=f6e7]: 한국 · 싱가포르 · 미국
+  - generic [ref=f6e8]:
+    - generic [ref=f6e9]:
+      - text: 시장
+      - combobox "시장" [ref=f6e10]:
+        - option "전체 시장" [selected]
+        - option "한국"
+        - option "싱가포르"
+        - option "미국"
+    - generic [ref=f6e11]:
+      - text: 종목·섹터 검색
+      - textbox "종목·섹터 검색" [ref=f6e12]:
+        - /placeholder: 삼성전자, 반도체, AI
+    - button "검색" [ref=f6e13] [cursor=pointer]
+  - group [ref=f6e14]:
+    - generic "시장별 자료 수집 상태" [ref=f6e15] [cursor=pointer]
+  - navigation "분석 흐름" [ref=f6e16]:
+    - button "섹터·주도주" [pressed] [ref=f6e17] [cursor=pointer]
+    - button "가치투자" [ref=f6e18] [cursor=pointer]
+  - status
+  - region [ref=f6e19]:
+    - generic [ref=f6e21]:
+      - heading "섹터·주도주 후보" [level=2] [ref=f6e22]
+      - paragraph [ref=f6e23]: ETF·기관 분석 → 섹터 검색·평가 → 주도주 후보 지표
+    - paragraph [ref=f6e24]: "가격 하한: 한국 5,000원 · 싱가포르 S$1 · 미국 US$5. 가격·통화 미확인 종목은 제외합니다. 관련주는 확인된 업종 분류 기준입니다."
+    - paragraph [ref=f6e25]: 관찰 점수는 상대강도·실적·유동성 기준입니다. 여섯 신호 전체의 종합점수가 아니며, 미확인 항목은 상세 근거로 확인하세요.
+    - paragraph [ref=f6e26]: 현재 표시 50개 / 검색 결과 81개 · 가격 하한 충족·가격 확인 종목 기준
+    - generic "observations 표 가로 스크롤" [ref=f6e27]:
+      - table [ref=f6e28]:
+        - rowgroup [ref=f6e29]:
+          - row [ref=f6e30]:
+            - cell [ref=f6e31]:
+              - strong [ref=f6e32]: Advanced Micro Devices, Inc. - Common Stock
+              - generic [ref=f6e33]: 미국 · AMDSemiconductor
+            - cell "현재가 620.7 USD" [ref=f6e34]:
+              - text: 현재가 620.7
+              - generic [ref=f6e35]: USD
+            - cell [ref=f6e36]:
+              - text: 최근 1개월
+              - generic [ref=f6e37]:
+                - img "최근 1개월 22.7% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e38]
+                - generic [ref=f6e40]: 최근 1개월 22.7%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e41]:
+              - text: 점수
+              - strong [ref=f6e42]: "96.1"
+            - cell "매수 검토가 22.5" [ref=f6e43]
+            - cell "매도 검토가 28.1" [ref=f6e44]
+            - cell [ref=f6e45]:
+              - group [ref=f6e46]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e47] [cursor=pointer]
+          - row [ref=f6e48]:
+            - cell [ref=f6e49]:
+              - strong [ref=f6e50]: 안랩
+              - generic [ref=f6e51]: 한국 · 053800.KQ소프트웨어 개발 및 공급업
+            - cell "현재가 75,300.0 KRW" [ref=f6e52]:
+              - text: 현재가 75,300.0
+              - generic [ref=f6e53]: KRW
+            - cell [ref=f6e54]:
+              - text: 최근 1개월
+              - generic [ref=f6e55]:
+                - img "최근 1개월 32.8% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e56]
+                - generic [ref=f6e58]: 최근 1개월 32.8%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e59]:
+              - text: 점수
+              - strong [ref=f6e60]: "93.3"
+            - cell "매수 검토가 45,695.9" [ref=f6e61]
+            - cell "매도 검토가 57,119.9" [ref=f6e62]
+            - cell [ref=f6e63]:
+              - group [ref=f6e64]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e65] [cursor=pointer]
+          - row [ref=f6e66]:
+            - cell [ref=f6e67]:
+              - strong [ref=f6e68]: Fortinet, Inc. - Common Stock
+              - generic [ref=f6e69]: 미국 · FTNTCyber Security
+            - cell "현재가 189.1 USD" [ref=f6e70]:
+              - text: 현재가 189.1
+              - generic [ref=f6e71]: USD
+            - cell [ref=f6e72]:
+              - text: 최근 1개월
+              - generic [ref=f6e73]:
+                - img "최근 1개월 20.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e74]
+                - generic [ref=f6e76]: 최근 1개월 20.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e77]:
+              - text: 점수
+              - strong [ref=f6e78]: "86.5"
+            - cell "매수 검토가 28.3" [ref=f6e79]
+            - cell "매도 검토가 35.3" [ref=f6e80]
+            - cell [ref=f6e81]:
+              - group [ref=f6e82]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e83] [cursor=pointer]
+          - row [ref=f6e84]:
+            - cell [ref=f6e85]:
+              - strong [ref=f6e86]: SK하이닉스
+              - generic [ref=f6e87]: 한국 · 000660.KS반도체 제조업
+            - cell "현재가 1,681,000.0 KRW" [ref=f6e88]:
+              - text: 현재가 1,681,000.0
+              - generic [ref=f6e89]: KRW
+            - cell [ref=f6e90]:
+              - text: 최근 1개월
+              - generic [ref=f6e91]:
+                - img "최근 1개월 -6.2% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e92]
+                - generic [ref=f6e94]: 최근 1개월 -6.2%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e95]:
+              - text: 점수
+              - strong [ref=f6e96]: "86.0"
+            - cell "매수 검토가 78,119.7" [ref=f6e97]
+            - cell "매도 검토가 97,649.6" [ref=f6e98]
+            - cell [ref=f6e99]:
+              - group [ref=f6e100]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e101] [cursor=pointer]
+          - row [ref=f6e102]:
+            - cell [ref=f6e103]:
+              - strong [ref=f6e104]: CrowdStrike Holdings, Inc. - Class A Common Stock
+              - generic [ref=f6e105]: 미국 · CRWDCyber Security
+            - cell "현재가 263.0 USD" [ref=f6e106]:
+              - text: 현재가 263.0
+              - generic [ref=f6e107]: USD
+            - cell [ref=f6e108]:
+              - text: 최근 1개월
+              - generic [ref=f6e109]:
+                - img "최근 1개월 25.2% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e110]
+                - generic [ref=f6e112]: 최근 1개월 25.2%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e113]:
+              - text: 점수
+              - strong [ref=f6e114]: "84.7"
+            - cell "매수 검토가 3.5" [ref=f6e115]
+            - cell "매도 검토가 4.3" [ref=f6e116]
+            - cell [ref=f6e117]:
+              - group [ref=f6e118]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e119] [cursor=pointer]
+          - row [ref=f6e120]:
+            - cell [ref=f6e121]:
+              - strong [ref=f6e122]: 삼성전자
+              - generic [ref=f6e123]: 한국 · 005930.KS통신 및 방송 장비 제조업
+            - cell "현재가 262,000.0 KRW" [ref=f6e124]:
+              - text: 현재가 262,000.0
+              - generic [ref=f6e125]: KRW
+            - cell [ref=f6e126]:
+              - text: 최근 1개월
+              - generic [ref=f6e127]:
+                - img "최근 1개월 -2.8% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e128]
+                - generic [ref=f6e130]: 최근 1개월 -2.8%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e131]:
+              - text: 점수
+              - strong [ref=f6e132]: "84.0"
+            - cell "매수 검토가 28,699.5" [ref=f6e133]
+            - cell "매도 검토가 35,874.4" [ref=f6e134]
+            - cell [ref=f6e135]:
+              - group [ref=f6e136]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e137] [cursor=pointer]
+          - row [ref=f6e138]:
+            - cell [ref=f6e139]:
+              - strong [ref=f6e140]: ASML Holding N.V. - New York Registry Shares
+              - generic [ref=f6e141]: 미국 · ASMLSemiconductor
+            - cell "현재가 1,769.8 USD" [ref=f6e142]:
+              - text: 현재가 1,769.8
+              - generic [ref=f6e143]: USD
+            - cell [ref=f6e144]:
+              - text: 최근 1개월
+              - generic [ref=f6e145]:
+                - img "최근 1개월 0.3% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e146]
+                - generic [ref=f6e148]: 최근 1개월 0.3%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e149]:
+              - text: 점수
+              - strong [ref=f6e150]: "83.2"
+            - cell "매수 검토가 미확인" [ref=f6e151]
+            - cell "매도 검토가 미확인" [ref=f6e152]
+            - cell [ref=f6e153]:
+              - group [ref=f6e154]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e155] [cursor=pointer]
+          - row [ref=f6e156]:
+            - cell [ref=f6e157]:
+              - strong [ref=f6e158]: AbbVie Inc. Common Stock
+              - generic [ref=f6e159]: 미국 · ABBVHealthcare
+            - cell "현재가 272.4 USD" [ref=f6e160]:
+              - text: 현재가 272.4
+              - generic [ref=f6e161]: USD
+            - cell [ref=f6e162]:
+              - text: 최근 1개월
+              - generic [ref=f6e163]:
+                - img "최근 1개월 9.5% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e164]
+                - generic [ref=f6e166]: 최근 1개월 9.5%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e167]:
+              - text: 점수
+              - strong [ref=f6e168]: "78.7"
+            - cell "매수 검토가 51.8" [ref=f6e169]
+            - cell "매도 검토가 64.7" [ref=f6e170]
+            - cell [ref=f6e171]:
+              - group [ref=f6e172]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e173] [cursor=pointer]
+          - row [ref=f6e174]:
+            - cell [ref=f6e175]:
+              - strong [ref=f6e176]: KB금융
+              - generic [ref=f6e177]: 한국 · 105560.KS기타 금융업
+            - cell "현재가 162,800.0 KRW" [ref=f6e178]:
+              - text: 현재가 162,800.0
+              - generic [ref=f6e179]: KRW
+            - cell [ref=f6e180]:
+              - text: 최근 1개월
+              - generic [ref=f6e181]:
+                - img "최근 1개월 -6.3% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e182]
+                - generic [ref=f6e184]: 최근 1개월 -6.3%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e185]:
+              - text: 점수
+              - strong [ref=f6e186]: "78.7"
+            - cell "매수 검토가 미확인" [ref=f6e187]
+            - cell "매도 검토가 미확인" [ref=f6e188]
+            - cell [ref=f6e189]:
+              - group [ref=f6e190]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e191] [cursor=pointer]
+          - row [ref=f6e192]:
+            - cell [ref=f6e193]:
+              - strong [ref=f6e194]: GE Vernova Inc. Common Stock
+              - generic [ref=f6e195]: 미국 · GEVPower Infrastructure
+            - cell "현재가 999.4 USD" [ref=f6e196]:
+              - text: 현재가 999.4
+              - generic [ref=f6e197]: USD
+            - cell [ref=f6e198]:
+              - text: 최근 1개월
+              - generic [ref=f6e199]:
+                - img "최근 1개월 2.9% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e200]
+                - generic [ref=f6e202]: 최근 1개월 2.9%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e203]:
+              - text: 점수
+              - strong [ref=f6e204]: "78.1"
+            - cell "매수 검토가 99.6" [ref=f6e205]
+            - cell "매도 검토가 124.5" [ref=f6e206]
+            - cell [ref=f6e207]:
+              - group [ref=f6e208]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e209] [cursor=pointer]
+          - row [ref=f6e210]:
+            - cell [ref=f6e211]:
+              - strong [ref=f6e212]: Arista Networks, Inc. Common Stock
+              - generic [ref=f6e213]: 미국 · ANETAI Infrastructure
+            - cell "현재가 211.0 USD" [ref=f6e214]:
+              - text: 현재가 211.0
+              - generic [ref=f6e215]: USD
+            - cell [ref=f6e216]:
+              - text: 최근 1개월
+              - generic [ref=f6e217]:
+                - img "최근 1개월 8.2% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e218]
+                - generic [ref=f6e220]: 최근 1개월 8.2%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e221]:
+              - text: 점수
+              - strong [ref=f6e222]: "78.1"
+            - cell "매수 검토가 32.5" [ref=f6e223]
+            - cell "매도 검토가 40.6" [ref=f6e224]
+            - cell [ref=f6e225]:
+              - group [ref=f6e226]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e227] [cursor=pointer]
+          - row [ref=f6e228]:
+            - cell [ref=f6e229]:
+              - strong [ref=f6e230]: 신한지주
+              - generic [ref=f6e231]: 한국 · 055550.KS기타 금융업
+            - cell "현재가 99,500.0 KRW" [ref=f6e232]:
+              - text: 현재가 99,500.0
+              - generic [ref=f6e233]: KRW
+            - cell [ref=f6e234]:
+              - text: 최근 1개월
+              - generic [ref=f6e235]:
+                - img "최근 1개월 -12.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e236]
+                - generic [ref=f6e238]: 최근 1개월 -12.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e239]:
+              - text: 점수
+              - strong [ref=f6e240]: "78.0"
+            - cell "매수 검토가 미확인" [ref=f6e241]
+            - cell "매도 검토가 미확인" [ref=f6e242]
+            - cell [ref=f6e243]:
+              - group [ref=f6e244]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e245] [cursor=pointer]
+          - row [ref=f6e246]:
+            - cell [ref=f6e247]:
+              - strong [ref=f6e248]: 두산
+              - generic [ref=f6e249]: 한국 · 000150.KS전자부품 제조업
+            - cell "현재가 1,342,000.0 KRW" [ref=f6e250]:
+              - text: 현재가 1,342,000.0
+              - generic [ref=f6e251]: KRW
+            - cell [ref=f6e252]:
+              - text: 최근 1개월
+              - generic [ref=f6e253]:
+                - img "최근 1개월 7.6% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e254]
+                - generic [ref=f6e256]: 최근 1개월 7.6%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e257]:
+              - text: 점수
+              - strong [ref=f6e258]: "77.3"
+            - cell "매수 검토가 미확인" [ref=f6e259]
+            - cell "매도 검토가 미확인" [ref=f6e260]
+            - cell [ref=f6e261]:
+              - group [ref=f6e262]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e263] [cursor=pointer]
+          - row [ref=f6e264]:
+            - cell [ref=f6e265]:
+              - strong [ref=f6e266]: 한미반도체
+              - generic [ref=f6e267]: 한국 · 042700.KS특수 목적용 기계 제조업
+            - cell "현재가 267,000.0 KRW" [ref=f6e268]:
+              - text: 현재가 267,000.0
+              - generic [ref=f6e269]: KRW
+            - cell [ref=f6e270]:
+              - text: 최근 1개월
+              - generic [ref=f6e271]:
+                - img "최근 1개월 9.2% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e272]
+                - generic [ref=f6e274]: 최근 1개월 9.2%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e275]:
+              - text: 점수
+              - strong [ref=f6e276]: "77.3"
+            - cell "매수 검토가 25,345.2" [ref=f6e277]
+            - cell "매도 검토가 31,681.5" [ref=f6e278]
+            - cell [ref=f6e279]:
+              - group [ref=f6e280]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e281] [cursor=pointer]
+          - row [ref=f6e282]:
+            - cell [ref=f6e283]:
+              - strong [ref=f6e284]: Johnson & Johnson Common Stock
+              - generic [ref=f6e285]: 미국 · JNJHealthcare
+            - cell "현재가 256.5 USD" [ref=f6e286]:
+              - text: 현재가 256.5
+              - generic [ref=f6e287]: USD
+            - cell [ref=f6e288]:
+              - text: 최근 1개월
+              - generic [ref=f6e289]:
+                - img "최근 1개월 -4.7% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e290]
+                - generic [ref=f6e292]: 최근 1개월 -4.7%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e293]:
+              - text: 점수
+              - strong [ref=f6e294]: "76.8"
+            - cell "매수 검토가 76.4" [ref=f6e295]
+            - cell "매도 검토가 95.5" [ref=f6e296]
+            - cell [ref=f6e297]:
+              - group [ref=f6e298]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e299] [cursor=pointer]
+          - row [ref=f6e300]:
+            - cell [ref=f6e301]:
+              - strong [ref=f6e302]: Eaton Corporation, PLC Ordinary Shares
+              - generic [ref=f6e303]: 미국 · ETNPower Infrastructure
+            - cell "현재가 424.5 USD" [ref=f6e304]:
+              - text: 현재가 424.5
+              - generic [ref=f6e305]: USD
+            - cell [ref=f6e306]:
+              - text: 최근 1개월
+              - generic [ref=f6e307]:
+                - img "최근 1개월 0.6% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e308]
+                - generic [ref=f6e310]: 최근 1개월 0.6%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e311]:
+              - text: 점수
+              - strong [ref=f6e312]: "76.1"
+            - cell "매수 검토가 미확인" [ref=f6e313]
+            - cell "매도 검토가 미확인" [ref=f6e314]
+            - cell [ref=f6e315]:
+              - group [ref=f6e316]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e317] [cursor=pointer]
+          - row [ref=f6e318]:
+            - cell [ref=f6e319]:
+              - strong [ref=f6e320]: KLA Corporation - Common Stock
+              - generic [ref=f6e321]: 미국 · KLACSemiconductor
+            - cell "현재가 196.7 USD" [ref=f6e322]:
+              - text: 현재가 196.7
+              - generic [ref=f6e323]: USD
+            - cell [ref=f6e324]:
+              - text: 최근 1개월
+              - generic [ref=f6e325]:
+                - img "최근 1개월 4.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e326]
+                - generic [ref=f6e328]: 최근 1개월 4.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e329]:
+              - text: 점수
+              - strong [ref=f6e330]: "74.8"
+            - cell "매수 검토가 35.6" [ref=f6e331]
+            - cell "매도 검토가 44.5" [ref=f6e332]
+            - cell [ref=f6e333]:
+              - group [ref=f6e334]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e335] [cursor=pointer]
+          - row [ref=f6e336]:
+            - cell [ref=f6e337]:
+              - strong [ref=f6e338]: Broadcom Inc. - Common Stock
+              - generic [ref=f6e339]: 미국 · AVGOAI Infrastructure
+            - cell "현재가 360.1 USD" [ref=f6e340]:
+              - text: 현재가 360.1
+              - generic [ref=f6e341]: USD
+            - cell [ref=f6e342]:
+              - text: 최근 1개월
+              - generic [ref=f6e343]:
+                - img "최근 1개월 -2.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e344]
+                - generic [ref=f6e346]: 최근 1개월 -2.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e347]:
+              - text: 점수
+              - strong [ref=f6e348]: "71.6"
+            - cell "매수 검토가 41.4" [ref=f6e349]
+            - cell "매도 검토가 51.8" [ref=f6e350]
+            - cell [ref=f6e351]:
+              - group [ref=f6e352]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e353] [cursor=pointer]
+          - row [ref=f6e354]:
+            - cell [ref=f6e355]:
+              - strong [ref=f6e356]: Eli Lilly and Company Common Stock
+              - generic [ref=f6e357]: 미국 · LLYHealthcare
+            - cell "현재가 1,169.6 USD" [ref=f6e358]:
+              - text: 현재가 1,169.6
+              - generic [ref=f6e359]: USD
+            - cell [ref=f6e360]:
+              - text: 최근 1개월
+              - generic [ref=f6e361]:
+                - img "최근 1개월 4.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e362]
+                - generic [ref=f6e364]: 최근 1개월 4.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e365]:
+              - text: 점수
+              - strong [ref=f6e366]: "71.6"
+            - cell "매수 검토가 26.4" [ref=f6e367]
+            - cell "매도 검토가 33.1" [ref=f6e368]
+            - cell [ref=f6e369]:
+              - group [ref=f6e370]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e371] [cursor=pointer]
+          - row [ref=f6e372]:
+            - cell [ref=f6e373]:
+              - strong [ref=f6e374]: 경방
+              - generic [ref=f6e375]: 한국 · 000050.KS종합 소매업
+            - cell "현재가 8,070.0 KRW" [ref=f6e376]:
+              - text: 현재가 8,070.0
+              - generic [ref=f6e377]: KRW
+            - cell [ref=f6e378]:
+              - text: 최근 1개월
+              - generic [ref=f6e379]:
+                - img "최근 1개월 -0.9% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e380]
+                - generic [ref=f6e382]: 최근 1개월 -0.9%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e383]:
+              - text: 점수
+              - strong [ref=f6e384]: "69.3"
+            - cell "매수 검토가 18,942.0" [ref=f6e385]
+            - cell "매도 검토가 23,677.5" [ref=f6e386]
+            - cell [ref=f6e387]:
+              - group [ref=f6e388]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e389] [cursor=pointer]
+          - row [ref=f6e390]:
+            - cell [ref=f6e391]:
+              - strong [ref=f6e392]: Amazon.com, Inc. - Common Stock
+              - generic [ref=f6e393]: 미국 · AMZNCloud
+            - cell "현재가 254.1 USD" [ref=f6e394]:
+              - text: 현재가 254.1
+              - generic [ref=f6e395]: USD
+            - cell [ref=f6e396]:
+              - text: 최근 1개월
+              - generic [ref=f6e397]:
+                - img "최근 1개월 -1.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e398]
+                - generic [ref=f6e400]: 최근 1개월 -1.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e401]:
+              - text: 점수
+              - strong [ref=f6e402]: "69.0"
+            - cell "매수 검토가 1.5" [ref=f6e403]
+            - cell "매도 검토가 1.9" [ref=f6e404]
+            - cell [ref=f6e405]:
+              - group [ref=f6e406]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e407] [cursor=pointer]
+          - row [ref=f6e408]:
+            - cell [ref=f6e409]:
+              - strong [ref=f6e410]: 엘에스일렉트릭
+              - generic [ref=f6e411]: 한국 · 010120.KS전동기, 발전기 및 전기 변환 · 공급 · 제어 장치 제조업
+            - cell "현재가 195,500.0 KRW" [ref=f6e412]:
+              - text: 현재가 195,500.0
+              - generic [ref=f6e413]: KRW
+            - cell [ref=f6e414]:
+              - text: 최근 1개월
+              - generic [ref=f6e415]:
+                - img "최근 1개월 -2.5% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e416]
+                - generic [ref=f6e418]: 최근 1개월 -2.5%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e419]:
+              - text: 점수
+              - strong [ref=f6e420]: "68.0"
+            - cell "매수 검토가 미확인" [ref=f6e421]
+            - cell "매도 검토가 미확인" [ref=f6e422]
+            - cell [ref=f6e423]:
+              - group [ref=f6e424]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e425] [cursor=pointer]
+          - row [ref=f6e426]:
+            - cell [ref=f6e427]:
+              - strong [ref=f6e428]: General Dynamics Corporation Common Stock
+              - generic [ref=f6e429]: 미국 · GDDefense
+            - cell "현재가 329.9 USD" [ref=f6e430]:
+              - text: 현재가 329.9
+              - generic [ref=f6e431]: USD
+            - cell [ref=f6e432]:
+              - text: 최근 1개월
+              - generic [ref=f6e433]:
+                - img "최근 1개월 -7.5% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e434]
+                - generic [ref=f6e436]: 최근 1개월 -7.5%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e437]:
+              - text: 점수
+              - strong [ref=f6e438]: "67.7"
+            - cell "매수 검토가 204.1" [ref=f6e439]
+            - cell "매도 검토가 255.2" [ref=f6e440]
+            - cell [ref=f6e441]:
+              - group [ref=f6e442]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e443] [cursor=pointer]
+          - row [ref=f6e444]:
+            - cell [ref=f6e445]:
+              - strong [ref=f6e446]: 유한양행
+              - generic [ref=f6e447]: 한국 · 000100.KS의약품 제조업
+            - cell "현재가 73,100.0 KRW" [ref=f6e448]:
+              - text: 현재가 73,100.0
+              - generic [ref=f6e449]: KRW
+            - cell [ref=f6e450]:
+              - text: 최근 1개월
+              - generic [ref=f6e451]:
+                - img "최근 1개월 -7.6% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e452]
+                - generic [ref=f6e454]: 최근 1개월 -7.6%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e455]:
+              - text: 점수
+              - strong [ref=f6e456]: "66.7"
+            - cell "매수 검토가 미확인" [ref=f6e457]
+            - cell "매도 검토가 미확인" [ref=f6e458]
+            - cell [ref=f6e459]:
+              - group [ref=f6e460]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e461] [cursor=pointer]
+          - row [ref=f6e462]:
+            - cell [ref=f6e463]:
+              - strong [ref=f6e464]: Alphabet Inc. - Class A Common Stock
+              - generic [ref=f6e465]: 미국 · GOOGLCloud
+            - cell "현재가 348.3 USD" [ref=f6e466]:
+              - text: 현재가 348.3
+              - generic [ref=f6e467]: USD
+            - cell [ref=f6e468]:
+              - text: 최근 1개월
+              - generic [ref=f6e469]:
+                - img "최근 1개월 2.9% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e470]
+                - generic [ref=f6e472]: 최근 1개월 2.9%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e473]:
+              - text: 점수
+              - strong [ref=f6e474]: "66.0"
+            - cell "매수 검토가 122.8" [ref=f6e475]
+            - cell "매도 검토가 153.5" [ref=f6e476]
+            - cell [ref=f6e477]:
+              - group [ref=f6e478]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e479] [cursor=pointer]
+          - row [ref=f6e480]:
+            - cell [ref=f6e481]:
+              - strong [ref=f6e482]: Equinix, Inc. - Common Stock
+              - generic [ref=f6e483]: 미국 · EQIXData Center
+            - cell "현재가 1,011.2 USD" [ref=f6e484]:
+              - text: 현재가 1,011.2
+              - generic [ref=f6e485]: USD
+            - cell [ref=f6e486]:
+              - text: 최근 1개월
+              - generic [ref=f6e487]:
+                - img "최근 1개월 -2.9% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e488]
+                - generic [ref=f6e490]: 최근 1개월 -2.9%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e491]:
+              - text: 점수
+              - strong [ref=f6e492]: "65.8"
+            - cell "매수 검토가 미확인" [ref=f6e493]
+            - cell "매도 검토가 미확인" [ref=f6e494]
+            - cell [ref=f6e495]:
+              - group [ref=f6e496]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e497] [cursor=pointer]
+          - row [ref=f6e498]:
+            - cell [ref=f6e499]:
+              - strong [ref=f6e500]: Applied Materials, Inc. - Common Stock
+              - generic [ref=f6e501]: 미국 · AMATSemiconductor
+            - cell "현재가 509.6 USD" [ref=f6e502]:
+              - text: 현재가 509.6
+              - generic [ref=f6e503]: USD
+            - cell [ref=f6e504]:
+              - text: 최근 1개월
+              - generic [ref=f6e505]:
+                - img "최근 1개월 7.8% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e506]
+                - generic [ref=f6e508]: 최근 1개월 7.8%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e509]:
+              - text: 점수
+              - strong [ref=f6e510]: "64.7"
+            - cell "매수 검토가 84.3" [ref=f6e511]
+            - cell "매도 검토가 105.4" [ref=f6e512]
+            - cell [ref=f6e513]:
+              - group [ref=f6e514]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e515] [cursor=pointer]
+          - row [ref=f6e516]:
+            - cell [ref=f6e517]:
+              - strong [ref=f6e518]: 두산에너빌리티
+              - generic [ref=f6e519]: 한국 · 034020.KS일반 목적용 기계 제조업
+            - cell "현재가 78,000.0 KRW" [ref=f6e520]:
+              - text: 현재가 78,000.0
+              - generic [ref=f6e521]: KRW
+            - cell [ref=f6e522]:
+              - text: 최근 1개월
+              - generic [ref=f6e523]:
+                - img "최근 1개월 -12.8% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e524]
+                - generic [ref=f6e526]: 최근 1개월 -12.8%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e527]:
+              - text: 점수
+              - strong [ref=f6e528]: "64.0"
+            - cell "매수 검토가 미확인" [ref=f6e529]
+            - cell "매도 검토가 미확인" [ref=f6e530]
+            - cell [ref=f6e531]:
+              - group [ref=f6e532]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e533] [cursor=pointer]
+          - row [ref=f6e534]:
+            - cell [ref=f6e535]:
+              - strong [ref=f6e536]: Lockheed Martin Corporation Common Stock
+              - generic [ref=f6e537]: 미국 · LMTDefense
+            - cell "현재가 507.9 USD" [ref=f6e538]:
+              - text: 현재가 507.9
+              - generic [ref=f6e539]: USD
+            - cell [ref=f6e540]:
+              - text: 최근 1개월
+              - generic [ref=f6e541]:
+                - img "최근 1개월 -5.3% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e542]
+                - generic [ref=f6e544]: 최근 1개월 -5.3%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e545]:
+              - text: 점수
+              - strong [ref=f6e546]: "63.2"
+            - cell "매수 검토가 235.2" [ref=f6e547]
+            - cell "매도 검토가 294.0" [ref=f6e548]
+            - cell [ref=f6e549]:
+              - group [ref=f6e550]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e551] [cursor=pointer]
+          - row [ref=f6e552]:
+            - cell [ref=f6e553]:
+              - strong [ref=f6e554]: 카카오뱅크
+              - generic [ref=f6e555]: 한국 · 323410.KS은행 및 저축기관
+            - cell "현재가 19,470.0 KRW" [ref=f6e556]:
+              - text: 현재가 19,470.0
+              - generic [ref=f6e557]: KRW
+            - cell [ref=f6e558]:
+              - text: 최근 1개월
+              - generic [ref=f6e559]:
+                - img "최근 1개월 -11.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e560]
+                - generic [ref=f6e562]: 최근 1개월 -11.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e563]:
+              - text: 점수
+              - strong [ref=f6e564]: "62.7"
+            - cell "매수 검토가 미확인" [ref=f6e565]
+            - cell "매도 검토가 미확인" [ref=f6e566]
+            - cell [ref=f6e567]:
+              - group [ref=f6e568]:
+                - generic "자료 확인 2/6 · 상세 근거" [ref=f6e569] [cursor=pointer]
+          - row [ref=f6e570]:
+            - cell [ref=f6e571]:
+              - strong [ref=f6e572]: Cameco Corporation Common Stock
+              - generic [ref=f6e573]: 미국 · CCJNuclear
+            - cell "현재가 87.1 USD" [ref=f6e574]:
+              - text: 현재가 87.1
+              - generic [ref=f6e575]: USD
+            - cell [ref=f6e576]:
+              - text: 최근 1개월
+              - generic [ref=f6e577]:
+                - img "최근 1개월 -14.6% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e578]
+                - generic [ref=f6e580]: 최근 1개월 -14.6%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e581]:
+              - text: 점수
+              - strong [ref=f6e582]: "61.9"
+            - cell "매수 검토가 미확인" [ref=f6e583]
+            - cell "매도 검토가 미확인" [ref=f6e584]
+            - cell [ref=f6e585]:
+              - group [ref=f6e586]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e587] [cursor=pointer]
+          - row [ref=f6e588]:
+            - cell [ref=f6e589]:
+              - strong [ref=f6e590]: Apple Inc. - Common Stock
+              - generic [ref=f6e591]: 미국 · AAPLTechnology
+            - cell "현재가 340.4 USD" [ref=f6e592]:
+              - text: 현재가 340.4
+              - generic [ref=f6e593]: USD
+            - cell [ref=f6e594]:
+              - text: 최근 1개월
+              - generic [ref=f6e595]:
+                - img "최근 1개월 7.7% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e596]
+                - generic [ref=f6e598]: 최근 1개월 7.7%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e599]:
+              - text: 점수
+              - strong [ref=f6e600]: "61.5"
+            - cell "매수 검토가 62.6" [ref=f6e601]
+            - cell "매도 검토가 78.3" [ref=f6e602]
+            - cell [ref=f6e603]:
+              - group [ref=f6e604]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e605] [cursor=pointer]
+          - row [ref=f6e606]:
+            - cell [ref=f6e607]:
+              - strong [ref=f6e608]: Constellation Energy Corporation - Common Stock When-Issued
+              - generic [ref=f6e609]: 미국 · CEGNuclear
+            - cell "현재가 285.1 USD" [ref=f6e610]:
+              - text: 현재가 285.1
+              - generic [ref=f6e611]: USD
+            - cell [ref=f6e612]:
+              - text: 최근 1개월
+              - generic [ref=f6e613]:
+                - img "최근 1개월 -4.7% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e614]
+                - generic [ref=f6e616]: 최근 1개월 -4.7%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e617]:
+              - text: 점수
+              - strong [ref=f6e618]: "59.4"
+            - cell "매수 검토가 미확인" [ref=f6e619]
+            - cell "매도 검토가 미확인" [ref=f6e620]
+            - cell [ref=f6e621]:
+              - group [ref=f6e622]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e623] [cursor=pointer]
+          - row [ref=f6e624]:
+            - cell [ref=f6e625]:
+              - strong [ref=f6e626]: 한화솔루션
+              - generic [ref=f6e627]: 한국 · 009830.KS기초 화학물질 제조업
+            - cell "현재가 36,000.0 KRW" [ref=f6e628]:
+              - text: 현재가 36,000.0
+              - generic [ref=f6e629]: KRW
+            - cell [ref=f6e630]:
+              - text: 최근 1개월
+              - generic [ref=f6e631]:
+                - img "최근 1개월 23.5% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e632]
+                - generic [ref=f6e634]: 최근 1개월 23.5%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e635]:
+              - text: 점수
+              - strong [ref=f6e636]: "59.3"
+            - cell "매수 검토가 미확인" [ref=f6e637]
+            - cell "매도 검토가 미확인" [ref=f6e638]
+            - cell [ref=f6e639]:
+              - group [ref=f6e640]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e641] [cursor=pointer]
+          - row [ref=f6e642]:
+            - cell [ref=f6e643]:
+              - strong [ref=f6e644]: 동화약품
+              - generic [ref=f6e645]: 한국 · 000020.KS의약품 제조업
+            - cell "현재가 5,360.0 KRW" [ref=f6e646]:
+              - text: 현재가 5,360.0
+              - generic [ref=f6e647]: KRW
+            - cell [ref=f6e648]:
+              - text: 최근 1개월
+              - generic [ref=f6e649]:
+                - img "최근 1개월 2.7% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e650]
+                - generic [ref=f6e652]: 최근 1개월 2.7%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e653]:
+              - text: 점수
+              - strong [ref=f6e654]: "58.0"
+            - cell "매수 검토가 미확인" [ref=f6e655]
+            - cell "매도 검토가 미확인" [ref=f6e656]
+            - cell [ref=f6e657]:
+              - group [ref=f6e658]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e659] [cursor=pointer]
+          - row [ref=f6e660]:
+            - cell [ref=f6e661]:
+              - strong [ref=f6e662]: LG에너지솔루션
+              - generic [ref=f6e663]: 한국 · 373220.KS일차전지 및 이차전지 제조업
+            - cell "현재가 401,000.0 KRW" [ref=f6e664]:
+              - text: 현재가 401,000.0
+              - generic [ref=f6e665]: KRW
+            - cell [ref=f6e666]:
+              - text: 최근 1개월
+              - generic [ref=f6e667]:
+                - img "최근 1개월 15.1% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e668]
+                - generic [ref=f6e670]: 최근 1개월 15.1%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e671]:
+              - text: 점수
+              - strong [ref=f6e672]: "58.0"
+            - cell "매수 검토가 미확인" [ref=f6e673]
+            - cell "매도 검토가 미확인" [ref=f6e674]
+            - cell [ref=f6e675]:
+              - group [ref=f6e676]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e677] [cursor=pointer]
+          - row [ref=f6e678]:
+            - cell [ref=f6e679]:
+              - strong [ref=f6e680]: Digital Realty Trust, Inc. Common Stock
+              - generic [ref=f6e681]: 미국 · DLRData Center
+            - cell "현재가 176.1 USD" [ref=f6e682]:
+              - text: 현재가 176.1
+              - generic [ref=f6e683]: USD
+            - cell [ref=f6e684]:
+              - text: 최근 1개월
+              - generic [ref=f6e685]:
+                - img "최근 1개월 -6.4% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e686]
+                - generic [ref=f6e688]: 최근 1개월 -6.4%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e689]:
+              - text: 점수
+              - strong [ref=f6e690]: "56.8"
+            - cell "매수 검토가 미확인" [ref=f6e691]
+            - cell "매도 검토가 미확인" [ref=f6e692]
+            - cell [ref=f6e693]:
+              - group [ref=f6e694]:
+                - generic "자료 확인 3/6 · 상세 근거" [ref=f6e695] [cursor=pointer]
+          - row [ref=f6e696]:
+            - cell [ref=f6e697]:
+              - strong [ref=f6e698]: 셀트리온
+              - generic [ref=f6e699]: 한국 · 068270.KS기초 의약물질 제조업
+            - cell "현재가 179,600.0 KRW" [ref=f6e700]:
+              - text: 현재가 179,600.0
+              - generic [ref=f6e701]: KRW
+            - cell [ref=f6e702]:
+              - text: 최근 1개월
+              - generic [ref=f6e703]:
+                - img "최근 1개월 -1.9% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e704]
+                - generic [ref=f6e706]: 최근 1개월 -1.9%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e707]:
+              - text: 점수
+              - strong [ref=f6e708]: "56.0"
+            - cell "매수 검토가 14,365.3" [ref=f6e709]
+            - cell "매도 검토가 17,956.6" [ref=f6e710]
+            - cell [ref=f6e711]:
+              - group [ref=f6e712]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e713] [cursor=pointer]
+          - row [ref=f6e714]:
+            - cell [ref=f6e715]:
+              - strong [ref=f6e716]: 삼성바이오로직스
+              - generic [ref=f6e717]: 한국 · 207940.KS기초 의약물질 제조업
+            - cell "현재가 1,219,000.0 KRW" [ref=f6e718]:
+              - text: 현재가 1,219,000.0
+              - generic [ref=f6e719]: KRW
+            - cell [ref=f6e720]:
+              - text: 최근 1개월
+              - generic [ref=f6e721]:
+                - img "최근 1개월 -15.3% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e722]
+                - generic [ref=f6e724]: 최근 1개월 -15.3%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e725]:
+              - text: 점수
+              - strong [ref=f6e726]: "55.3"
+            - cell "매수 검토가 115,579.0" [ref=f6e727]
+            - cell "매도 검토가 144,473.7" [ref=f6e728]
+            - cell [ref=f6e729]:
+              - group [ref=f6e730]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e731] [cursor=pointer]
+          - row [ref=f6e732]:
+            - cell [ref=f6e733]:
+              - strong [ref=f6e734]: Intuitive Surgical, Inc. - Common Stock
+              - generic [ref=f6e735]: 미국 · ISRGHealthcare
+            - cell "현재가 415.4 USD" [ref=f6e736]:
+              - text: 현재가 415.4
+              - generic [ref=f6e737]: USD
+            - cell [ref=f6e738]:
+              - text: 최근 1개월
+              - generic [ref=f6e739]:
+                - img "최근 1개월 18.6% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e740]
+                - generic [ref=f6e742]: 최근 1개월 18.6%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e743]:
+              - text: 점수
+              - strong [ref=f6e744]: "53.5"
+            - cell "매수 검토가 28.7" [ref=f6e745]
+            - cell "매도 검토가 35.8" [ref=f6e746]
+            - cell [ref=f6e747]:
+              - group [ref=f6e748]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e749] [cursor=pointer]
+          - row [ref=f6e750]:
+            - cell [ref=f6e751]:
+              - strong [ref=f6e752]: 삼성SDI
+              - generic [ref=f6e753]: 한국 · 006400.KS일차전지 및 이차전지 제조업
+            - cell "현재가 569,000.0 KRW" [ref=f6e754]:
+              - text: 현재가 569,000.0
+              - generic [ref=f6e755]: KRW
+            - cell [ref=f6e756]:
+              - text: 최근 1개월
+              - generic [ref=f6e757]:
+                - img "최근 1개월 7.4% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e758]
+                - generic [ref=f6e760]: 최근 1개월 7.4%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e761]:
+              - text: 점수
+              - strong [ref=f6e762]: "52.7"
+            - cell "매수 검토가 미확인" [ref=f6e763]
+            - cell "매도 검토가 미확인" [ref=f6e764]
+            - cell [ref=f6e765]:
+              - group [ref=f6e766]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e767] [cursor=pointer]
+          - row [ref=f6e768]:
+            - cell [ref=f6e769]:
+              - strong [ref=f6e770]: L3Harris Technologies, Inc. Common Stock
+              - generic [ref=f6e771]: 미국 · LHXDefense
+            - cell "현재가 236.9 USD" [ref=f6e772]:
+              - text: 현재가 236.9
+              - generic [ref=f6e773]: USD
+            - cell [ref=f6e774]:
+              - text: 최근 1개월
+              - generic [ref=f6e775]:
+                - img "최근 1개월 -7.4% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e776]
+                - generic [ref=f6e778]: 최근 1개월 -7.4%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e779]:
+              - text: 점수
+              - strong [ref=f6e780]: "49.7"
+            - cell "매수 검토가 137.4" [ref=f6e781]
+            - cell "매도 검토가 171.8" [ref=f6e782]
+            - cell [ref=f6e783]:
+              - group [ref=f6e784]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e785] [cursor=pointer]
+          - row [ref=f6e786]:
+            - cell [ref=f6e787]:
+              - strong [ref=f6e788]: CJ대한통운
+              - generic [ref=f6e789]: 한국 · 000120.KS도로 화물 운송업
+            - cell "현재가 69,300.0 KRW" [ref=f6e790]:
+              - text: 현재가 69,300.0
+              - generic [ref=f6e791]: KRW
+            - cell [ref=f6e792]:
+              - text: 최근 1개월
+              - generic [ref=f6e793]:
+                - img "최근 1개월 -5.8% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e794]
+                - generic [ref=f6e796]: 최근 1개월 -5.8%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e797]:
+              - text: 점수
+              - strong [ref=f6e798]: "49.3"
+            - cell "매수 검토가 50,852.3" [ref=f6e799]
+            - cell "매도 검토가 63,565.3" [ref=f6e800]
+            - cell [ref=f6e801]:
+              - group [ref=f6e802]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e803] [cursor=pointer]
+          - row [ref=f6e804]:
+            - cell [ref=f6e805]:
+              - strong [ref=f6e806]: NAVER
+              - generic [ref=f6e807]: 한국 · 035420.KS자료처리, 호스팅, 포털 및 기타 인터넷 정보매개 서비스업
+            - cell "현재가 183,800.0 KRW" [ref=f6e808]:
+              - text: 현재가 183,800.0
+              - generic [ref=f6e809]: KRW
+            - cell [ref=f6e810]:
+              - text: 최근 1개월
+              - generic [ref=f6e811]:
+                - img "최근 1개월 -14.3% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e812]
+                - generic [ref=f6e814]: 최근 1개월 -14.3%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e815]:
+              - text: 점수
+              - strong [ref=f6e816]: "47.3"
+            - cell "매수 검토가 156,992.6" [ref=f6e817]
+            - cell "매도 검토가 196,240.8" [ref=f6e818]
+            - cell [ref=f6e819]:
+              - group [ref=f6e820]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e821] [cursor=pointer]
+          - row [ref=f6e822]:
+            - cell [ref=f6e823]:
+              - strong [ref=f6e824]: 한국항공우주
+              - generic [ref=f6e825]: 한국 · 047810.KS항공기,우주선 및 부품 제조업
+            - cell "현재가 121,400.0 KRW" [ref=f6e826]:
+              - text: 현재가 121,400.0
+              - generic [ref=f6e827]: KRW
+            - cell [ref=f6e828]:
+              - text: 최근 1개월
+              - generic [ref=f6e829]:
+                - img "최근 1개월 -5.0% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e830]
+                - generic [ref=f6e832]: 최근 1개월 -5.0%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e833]:
+              - text: 점수
+              - strong [ref=f6e834]: "47.3"
+            - cell "매수 검토가 미확인" [ref=f6e835]
+            - cell "매도 검토가 미확인" [ref=f6e836]
+            - cell [ref=f6e837]:
+              - group [ref=f6e838]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e839] [cursor=pointer]
+          - row [ref=f6e840]:
+            - cell [ref=f6e841]:
+              - strong [ref=f6e842]: 한전기술
+              - generic [ref=f6e843]: 한국 · 052690.KS건축기술, 엔지니어링 및 관련 기술 서비스업
+            - cell "현재가 123,000.0 KRW" [ref=f6e844]:
+              - text: 현재가 123,000.0
+              - generic [ref=f6e845]: KRW
+            - cell [ref=f6e846]:
+              - text: 최근 1개월
+              - generic [ref=f6e847]:
+                - img "최근 1개월 -13.7% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e848]
+                - generic [ref=f6e850]: 최근 1개월 -13.7%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e851]:
+              - text: 점수
+              - strong [ref=f6e852]: "47.3"
+            - cell "매수 검토가 미확인" [ref=f6e853]
+            - cell "매도 검토가 미확인" [ref=f6e854]
+            - cell [ref=f6e855]:
+              - group [ref=f6e856]:
+                - generic "자료 확인 2/6 · 상세 근거" [ref=f6e857] [cursor=pointer]
+          - row [ref=f6e858]:
+            - cell [ref=f6e859]:
+              - strong [ref=f6e860]: LIG디펜스앤에어로스페이스
+              - generic [ref=f6e861]: 한국 · 079550.KS무기 및 총포탄 제조업
+            - cell "현재가 616,000.0 KRW" [ref=f6e862]:
+              - text: 현재가 616,000.0
+              - generic [ref=f6e863]: KRW
+            - cell [ref=f6e864]:
+              - text: 최근 1개월
+              - generic [ref=f6e865]:
+                - img "최근 1개월 -7.5% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e866]
+                - generic [ref=f6e868]: 최근 1개월 -7.5%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e869]:
+              - text: 점수
+              - strong [ref=f6e870]: "46.0"
+            - cell "매수 검토가 167,965.5" [ref=f6e871]
+            - cell "매도 검토가 209,956.9" [ref=f6e872]
+            - cell [ref=f6e873]:
+              - group [ref=f6e874]:
+                - generic "자료 확인 4/6 · 상세 근거" [ref=f6e875] [cursor=pointer]
+          - row [ref=f6e876]:
+            - cell [ref=f6e877]:
+              - strong [ref=f6e878]: Enphase Energy, Inc. - Common Stock
+              - generic [ref=f6e879]: 미국 · ENPHRenewable Energy
+            - cell "현재가 32.9 USD" [ref=f6e880]:
+              - text: 현재가 32.9
+              - generic [ref=f6e881]: USD
+            - cell [ref=f6e882]:
+              - text: 최근 1개월
+              - generic [ref=f6e883]:
+                - img "최근 1개월 -15.2% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e884]
+                - generic [ref=f6e886]: 최근 1개월 -15.2%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e887]:
+              - text: 점수
+              - strong [ref=f6e888]: "45.4"
+            - cell "매수 검토가 12.1" [ref=f6e889]
+            - cell "매도 검토가 15.2" [ref=f6e890]
+            - cell [ref=f6e891]:
+              - group [ref=f6e892]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e893] [cursor=pointer]
+          - row [ref=f6e894]:
+            - cell [ref=f6e895]:
+              - strong [ref=f6e896]: BWX Technologies, Inc. Common Stock
+              - generic [ref=f6e897]: 미국 · BWXTNuclear
+            - cell "현재가 142.2 USD" [ref=f6e898]:
+              - text: 현재가 142.2
+              - generic [ref=f6e899]: USD
+            - cell [ref=f6e900]:
+              - text: 최근 1개월
+              - generic [ref=f6e901]:
+                - img "최근 1개월 -11.3% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e902]
+                - generic [ref=f6e904]: 최근 1개월 -11.3%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e905]:
+              - text: 점수
+              - strong [ref=f6e906]: "43.4"
+            - cell "매수 검토가 20.1" [ref=f6e907]
+            - cell "매도 검토가 25.1" [ref=f6e908]
+            - cell [ref=f6e909]:
+              - group [ref=f6e910]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e911] [cursor=pointer]
+          - row [ref=f6e912]:
+            - cell [ref=f6e913]:
+              - strong [ref=f6e914]: 한화에어로스페이스
+              - generic [ref=f6e915]: 한국 · 012450.KS항공기,우주선 및 부품 제조업
+            - cell "현재가 891,000.0 KRW" [ref=f6e916]:
+              - text: 현재가 891,000.0
+              - generic [ref=f6e917]: KRW
+            - cell [ref=f6e918]:
+              - text: 최근 1개월
+              - generic [ref=f6e919]:
+                - img "최근 1개월 -13.2% · 2026-09-08 → 2026-10-08 · 배당·분할 조정 종가" [ref=f6e920]
+                - generic [ref=f6e922]: 최근 1개월 -13.2%2026-09-08 → 2026-10-08배당·분할 조정 종가 · Yahoo Finance
+            - cell [ref=f6e923]:
+              - text: 점수
+              - strong [ref=f6e924]: "42.0"
+            - cell "매수 검토가 288,061.7" [ref=f6e925]
+            - cell "매도 검토가 360,077.2" [ref=f6e926]
+            - cell [ref=f6e927]:
+              - group [ref=f6e928]:
+                - generic "자료 확인 5/6 · 상세 근거" [ref=f6e929] [cursor=pointer]
+    - generic [ref=f6e930]:
+      - button "이전" [disabled] [ref=f6e931]
+      - button "다음" [ref=f6e932] [cursor=pointer]
+    - group [ref=f6e933]:
+      - generic "여섯 가지 신호의 확인 기준" [ref=f6e934] [cursor=pointer]
+  - text: 현재가 최근 1개월 점수 매수 검토가 매도 검토가
+  - generic [ref=f6e935]:
+    - heading "뉴스 근거 후보" [level=2] [ref=f6e936]
+    - paragraph [ref=f6e937]: 기존 두 분석과 별도인 검토 목록입니다. 최근 14일 기사 제목의 호재 키워드로 발굴하며, 실제 수혜·공시 일치 여부는 확인이 필요합니다. 점수와 매매 검토 가격에 반영하지 않습니다.
+    - article [ref=f6e939]:
+      - heading "셀트리온 068270.KS · 한국" [level=3] [ref=f6e940]:
+        - text: 셀트리온
+        - generic [ref=f6e941]: 068270.KS · 한국
+      - link "亞 최대 바이오 행사 개최…삼바·셀트리온 '글로벌 수주전' - 네이트" [ref=f6e942] [cursor=pointer]:
+        - /url: https://news.google.com/rss/articles/CBMiU0FVX3lxTE9yQnVVRGhZLVdteG1XbkZGdlVMQjVyY1BubnRQYi1JR3I4N2ZjbUFPaVFfaUdGeTRVeWQ0X19YRzI4UnVPbjRzX0h1bTBYalVjNWhJ?oc=5
+      - paragraph [ref=f6e943]: 수주·계약 관련
+      - generic [ref=f6e944]: 네이트 · 2026-10-06T09:19:00+00:00기사 제목의 기업명 직접 일치 · 호재 유형 키워드 감지
+      - generic [ref=f6e945]: 원문·공시 확인 필요
+  - paragraph [ref=f6e946]: 저장된 자료 기준 정적 보고서입니다. 목록 갱신·검색·평가는 실행 중인 앱에서 사용할 수 있습니다.
+  - generic [ref=f6e947]: 기준 시각 2026-10-10T22:50+08:00 · 기업명을 펼치면 출처·가정·자료 상태를 볼 수 있습니다. 실제 자료가 없는 항목은 미확인으로 표시됩니다.
