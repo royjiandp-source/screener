@@ -1,0 +1,93 @@
+<!doctype html><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Strong vs Index 2026-10-10</title>
+<style>body{font-family:sans-serif;margin:20px}table{border-collapse:collapse;font-size:13px;margin-bottom:12px}
+td,th{border:1px solid #ccc;padding:6px;vertical-align:top}th{background:#f3f3f3}
+tr.strong td{background:#eaf7ea}td:last-child{max-width:420px}
+.box{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:14px;margin:14px 0}
+#q{font-size:16px;padding:8px 10px;width:min(420px,90%);border:1px solid #888;border-radius:6px}
+.chip{display:inline-block;background:#ddf4ff;border-radius:10px;padding:1px 8px;margin:2px;
+cursor:pointer;font-size:12px}.chip:hover{background:#b6e3ff}</style>
+<h2>Stocks stronger than the index / 지수보다 강한 종목 — 2026-10-10</h2>
+
+<div class="box">
+<b>🔍 Search stock or theme / 종목·테마 검색</b><br>
+<input id="q" placeholder="예: 삼성전자, 반도체, NVDA, DBS, bank" autofocus>
+<label><input type="checkbox" id="strong"> Only stronger than index / 지수보다 강한 종목만</label>
+<div style="font-size:12px;color:#555;margin-top:6px">
+Searches all 28 scanned stocks. Stock name → stock + related stocks (same themes).
+Theme → all stocks in that theme. Click a theme chip to search it.<br>
+스캔한 전체 28개 종목에서 검색. 종목명 → 종목 + 관련주(같은 테마). 테마명 → 해당 테마 전체. 테마 칩을 누르면 그 테마로 검색.</div>
+<div id="out"></div>
+</div>
+
+<h3>Top picks / 상위 종목</h3>
+<p>Green = STRONG (stock MA20 rising, index MA20 flat or falling).
+Price filter / 가격 필터: SG ≥ 1, KR ≥ 5,000, US ≥ 5. Not financial advice.</p>
+<table><tr><th>market</th><th>ticker</th><th>name</th><th>index</th><th>signal</th><th>score</th><th>price</th><th>ma20_slope_%</th><th>idx_ma20_slope_%</th><th>rs_20d_%</th><th>themes</th><th>news / AI</th></tr></table>
+<script>
+const DATA = [{"market": "SG", "ticker": "D05.SI", "name": "DBS", "signal": "STRONGER", "score": 1.14, "price": 73.36, "rs": 0.46, "tags": ["Financials", "Banks"]}, {"market": "SG", "ticker": "O39.SI", "name": "OCBC", "signal": "WEAKER", "score": -3.43, "price": 29.0, "rs": -3.23, "tags": ["Financials", "Banks"]}, {"market": "SG", "ticker": "U11.SI", "name": "UOB", "signal": "STRONG", "score": 4.3, "price": 39.96, "rs": 2.12, "tags": ["Financials", "Banks"]}, {"market": "SG", "ticker": "Z74.SI", "name": "Singtel", "signal": "WEAKER", "score": -2.24, "price": 4.24, "rs": -0.65, "tags": ["Communication", "Telecom"]}, {"market": "SG", "ticker": "C38U.SI", "name": "CapitaLand Integrated Comm Trust", "signal": "STRONGER", "score": 3.69, "price": 2.24, "rs": 3.59, "tags": ["Real Estate", "REIT"]}, {"market": "SG", "ticker": "A17U.SI", "name": "CapitaLand Ascendas REIT", "signal": "WEAKER", "score": -3.01, "price": 2.19, "rs": -1.32, "tags": ["Real Estate", "REIT"]}, {"market": "SG", "ticker": "9CI.SI", "name": "CapitaLand Investment", "signal": "WEAKER", "score": -2.56, "price": 2.44, "rs": -1.05, "tags": ["Real Estate", "Investment"]}, {"market": "SG", "ticker": "C6L.SI", "name": "Singapore Airlines", "signal": "STRONGER", "score": 5.09, "price": 6.57, "rs": 4.02, "tags": ["Industrials", "Airlines"]}, {"market": "SG", "ticker": "BN4.SI", "name": "Keppel", "signal": "WEAKER", "score": -5.16, "price": 10.52, "rs": -2.95, "tags": ["Industrials", "Conglomerate"]}, {"market": "SG", "ticker": "S68.SI", "name": "SGX", "signal": "WEAKER", "score": -16.9, "price": 20.73, "rs": -10.05, "tags": ["Financials", "Exchanges"]}, {"market": "SG", "ticker": "S63.SI", "name": "ST Engineering", "signal": "STRONG", "score": 11.29, "price": 10.42, "rs": 7.3, "tags": ["Industrials", "Aerospace & Defense"]}, {"market": "SG", "ticker": "U96.SI", "name": "Sembcorp Industries", "signal": "WEAKER", "score": 5.38, "price": 5.9, "rs": 1.99, "tags": ["Utilities", "Energy"]}, {"market": "SG", "ticker": "5E2.SI", "name": "Seatrium", "signal": "WEAKER", "score": -4.57, "price": 2.0, "rs": -1.91, "tags": ["Industrials", "Shipbuilding"]}, {"market": "SG", "ticker": "BS6.SI", "name": "Yangzijiang Shipbuilding", "signal": "STRONG", "score": 11.7, "price": 5.1, "rs": 7.98, "tags": ["Industrials", "Shipbuilding"]}, {"market": "SG", "ticker": "F34.SI", "name": "Wilmar", "signal": "WEAKER", "score": -0.06, "price": 3.55, "rs": 0.9, "tags": ["Consumer Staples", "Agribusiness"]}, {"market": "SG", "ticker": "S58.SI", "name": "SATS", "signal": "WEAKER", "score": -0.83, "price": 3.73, "rs": 0.59, "tags": ["Industrials", "Aviation Services"]}, {"market": "SG", "ticker": "V03.SI", "name": "Venture Corp", "signal": "STRONGER", "score": 3.99, "price": 16.29, "rs": 3.04, "tags": ["Information Technology", "Electronics"]}, {"market": "SG", "ticker": "U14.SI", "name": "UOL", "signal": "WEAKER", "score": -5.97, "price": 7.96, "rs": -2.86, "tags": ["Real Estate", "Developer"]}, {"market": "SG", "ticker": "C09.SI", "name": "City Developments", "signal": "WEAKER", "score": -14.63, "price": 7.1, "rs": -8.25, "tags": ["Real Estate", "Developer"]}, {"market": "SG", "ticker": "H78.SI", "name": "Hongkong Land", "signal": "WEAKER", "score": -0.22, "price": 8.1, "rs": 0.72, "tags": ["Real Estate", "Developer"]}, {"market": "SG", "ticker": "J36.SI", "name": "Jardine Matheson", "signal": "WEAKER", "score": 4.23, "price": 56.73, "rs": 2.38, "tags": ["Industrials", "Conglomerate"]}, {"market": "SG", "ticker": "C07.SI", "name": "Jardine C&C", "signal": "STRONGER", "score": 1.57, "price": 25.83, "rs": 0.85, "tags": ["Consumer Discretionary", "Auto"]}, {"market": "SG", "ticker": "D01.SI", "name": "DFI Retail", "signal": "WEAKER", "score": -9.7, "price": 3.17, "rs": -4.5, "tags": ["Consumer Staples", "Retail"]}, {"market": "SG", "ticker": "M44U.SI", "name": "Mapletree Logistics Trust", "signal": "WEAKER", "score": 0.98, "price": 1.08, "rs": 1.68, "tags": ["Real Estate", "REIT"]}, {"market": "SG", "ticker": "ME8U.SI", "name": "Mapletree Industrial Trust", "signal": "WEAKER", "score": 0.37, "price": 1.83, "rs": 1.03, "tags": ["Real Estate", "REIT"]}, {"market": "SG", "ticker": "N2IU.SI", "name": "Mapletree Pan Asia Comm Trust", "signal": "STRONGER", "score": 5.29, "price": 1.19, "rs": 4.56, "tags": ["Real Estate", "REIT"]}, {"market": "SG", "ticker": "J69U.SI", "name": "Frasers Centrepoint Trust", "signal": "STRONGER", "score": 5.22, "price": 2.07, "rs": 4.43, "tags": ["Real Estate", "REIT"]}, {"market": "SG", "ticker": "AJBU.SI", "name": "Keppel DC REIT", "signal": "STRONGER", "score": 7.63, "price": 2.13, "rs": 4.95, "tags": ["Real Estate", "REIT"]}];
+// Korean keyword -> English sector words, so "반도체" also finds US/SG stocks.
+const ALIAS = {"반도체":"semiconductor","은행":"bank","리츠":"reit","부동산":"real estate",
+  "제약":"pharma","바이오":"biotech","자동차":"auto","소프트웨어":"software","보험":"insurance",
+  "항공":"airline","조선":"shipbuild","통신":"telecom","에너지":"energy","석유":"oil",
+  "게임":"interactive","방산":"defense","2차전지":"batter","배터리":"batter","유통":"retail",
+  "음식료":"food","건설":"construction","화학":"chemical","철강":"steel","전력":"utilit",
+  "인터넷":"internet","카지노":"casino","해운":"marine","증권":"capital markets"};
+const SIG = {STRONG:"#1a7f37",STRONGER:"#4c9a5e",WEAKER:"#9a6700",WEAK:"#cf222e"};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const low = s => String(s).toLowerCase();
+
+function row(d, shared) {
+  const tags = d.tags.slice(0, 6).map(t =>
+    `<span class="chip" onclick="go('${esc(t).replace(/'/g,"\\'")}')">${esc(t)}</span>`).join("");
+  return `<tr><td>${d.market}</td><td>${esc(d.ticker)}</td><td><b>${esc(d.name)}</b></td>
+    <td style="color:${SIG[d.signal]};font-weight:600">${d.signal}</td><td>${d.score}</td>
+    <td>${d.price.toLocaleString()}</td><td>${d.rs}%</td>
+    <td>${shared ? shared + " shared / 공통 " : ""}</td><td>${tags}</td></tr>`;
+}
+function table(title, list, sharedMap) {
+  if (!list.length) return "";
+  return `<h3>${title} (${list.length})</h3><table><tr><th>mkt</th><th>ticker</th><th>name</th>
+    <th>signal</th><th>score</th><th>price</th><th>RS 20d</th><th>related</th><th>themes / sector</th></tr>
+    ${list.map(d => row(d, sharedMap ? sharedMap.get(d) : 0)).join("")}</table>`;
+}
+function go(q) { $("#q").value = q; search(); window.scrollTo(0, $("#q").offsetTop - 10); }
+
+function search() {
+  const q = low($("#q").value.trim());
+  const onlyStrong = $("#strong").checked;
+  const ok = d => !onlyStrong || d.signal === "STRONG" || d.signal === "STRONGER";
+  const bySc = (a, b) => b.score - a.score;
+  if (!q) { $("#out").innerHTML = ""; return; }
+
+  // 1) stock name / ticker match
+  const hits = DATA.filter(d => low(d.name).includes(q) || low(d.ticker).includes(q));
+  // 2) theme / sector match (plus English alias for Korean words)
+  const words = [q]; if (ALIAS[q]) words.push(ALIAS[q]);
+  const themed = DATA.filter(d => !hits.includes(d) &&
+    d.tags.some(t => words.some(w => low(t).includes(w)))).filter(ok).sort(bySc);
+  // 3) related stocks: share themes/sector with the matched stock(s)
+  const hitTags = new Set(hits.flatMap(d => d.tags));
+  const shared = new Map();
+  DATA.forEach(d => {
+    if (hits.includes(d) || themed.includes(d)) return;
+    const n = d.tags.filter(t => hitTags.has(t)).length;
+    if (n) shared.set(d, n);
+  });
+  const related = [...shared.keys()].filter(ok)
+    .sort((a, b) => shared.get(b) - shared.get(a) || b.score - a.score).slice(0, 50);
+
+  let h = table("Matched stocks / 검색 종목", hits);
+  if (hits.length && hitTags.size) {
+    h += `<p>Themes of matched stock (click) / 해당 종목 테마 (클릭): ` +
+      [...hitTags].map(t => `<span class="chip" onclick="go('${esc(t).replace(/'/g,"\\'")}')">${esc(t)}</span>`).join("") + `</p>`;
+  }
+  h += table(`Theme / sector "${esc(q)}" / 테마·섹터 종목`, themed);
+  h += table("Related stocks / 관련주 (most shared themes first)", related, shared);
+  $("#out").innerHTML = h || "<p>No results / 결과 없음</p>";
+}
+$("#q").addEventListener("input", search);
+$("#strong").addEventListener("change", search);
+</script>

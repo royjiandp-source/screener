@@ -16,7 +16,15 @@
 
 Open `strong_YYYYMMDD.html` in your browser. / 브라우저로 여세요.
 
-## Search box / 검색창
+## Live search app / 실시간 검색 앱
+    python3 -m streamlit run app.py
+- Opens in your browser. Every search downloads fresh prices (Yahoo, up to ~15 min delay).
+- 브라우저가 열립니다. 검색할 때마다 최신 가격을 새로 받아 옵니다 (야후, 최대 약 15분 지연).
+- Any stock works, even outside the screener list (e.g. 삼성전자, TSLA).
+- Stock lists & Naver themes are cached 1 hour (CACHE_SECONDS in app.py). / 목록·테마는 1시간 저장.
+- Stop: press Ctrl+C in Terminal. / 종료: 터미널에서 Ctrl+C.
+
+## Search box in the daily report / 일일 리포트 검색창 (snapshot / 스냅샷)
 - `삼성전자` → Samsung + related stocks (same Naver themes) / 삼성전자 + 관련주
 - `반도체` → all semiconductor stocks (KR themes + US/SG sectors) / 반도체 종목 전체
 - Click a theme chip to search it. / 테마 칩을 누르면 그 테마로 검색.

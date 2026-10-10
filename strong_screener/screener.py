@@ -79,24 +79,62 @@ def universe_sg():
 
 
 def universe_us():
-    r = requests.get("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
-                     headers=UA, timeout=30)
-    df = pd.read_html(r.text)[0]
+    """S&P 500 list. Main source: GitHub CSV. Backup: Wikipedia."""
+    import io
+    try:
+        url = ("https://raw.githubusercontent.com/datasets/"
+               "s-and-p-500-companies/main/data/constituents.csv")
+        df = pd.read_csv(io.StringIO(requests.get(url, headers=UA, timeout=30).text))
+    except Exception as e:
+        print(f"[US] GitHub list failed ({e}); trying Wikipedia ...")
+        r = requests.get("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+                         headers=UA, timeout=30)
+        df = pd.read_html(io.StringIO(r.text))[0]
     names, sectors = {}, {}
     for _, row in df.iterrows():
         t = str(row["Symbol"]).replace(".", "-")
         names[t] = row["Security"]
         sectors[t] = [x for x in (row.get("GICS Sector"), row.get("GICS Sub-Industry"))
                       if isinstance(x, str)]
+    print(f"[US] {len(names)} stocks in list")
     return names, {"^GSPC": "S&P 500"}, sectors
 
 
+def naver_market_cap(sosok, top_n):
+    """Top N stocks by market cap from Naver. sosok 0 = KOSPI, 1 = KOSDAQ."""
+    out, page = {}, 1
+    while len(out) < top_n and page <= 40:
+        r = requests.get("https://finance.naver.com/sise/sise_market_sum.naver",
+                         params={"sosok": sosok, "page": page}, headers=UA, timeout=20)
+        r.encoding = "euc-kr"
+        found = re.findall(r'/item/main\.naver\?code=(\d{6})"\s+class="tltle">([^<]+)</a>',
+                           r.text)
+        if not found:
+            break
+        for code, name in found:
+            out.setdefault(code, name.strip())
+        page += 1
+    return dict(list(out.items())[:top_n])
+
+
 def universe_kr(top_n):
-    import FinanceDataReader as fdr
+    """Top N KOSPI + top N KOSDAQ by market cap. Main: Naver. Backup: FinanceDataReader."""
     out = {}
-    for market, suffix in (("KOSPI", ".KS"), ("KOSDAQ", ".KQ")):
-        df = fdr.StockListing(market).sort_values("Marcap", ascending=False).head(top_n)
-        out.update({f"{c}{suffix}": n for c, n in zip(df["Code"], df["Name"])})
+    for sosok, market, suffix in ((0, "KOSPI", ".KS"), (1, "KOSDAQ", ".KQ")):
+        got = {}
+        try:
+            got = naver_market_cap(sosok, top_n)
+        except Exception as e:
+            print(f"[KR] Naver {market} list failed: {e}")
+        if not got:
+            try:
+                import FinanceDataReader as fdr
+                df = fdr.StockListing(market).sort_values("Marcap", ascending=False).head(top_n)
+                got = dict(zip(df["Code"], df["Name"]))
+            except Exception as e:
+                print(f"[KR] FinanceDataReader {market} failed: {e}")
+        print(f"[KR] {market}: {len(got)} stocks in list")
+        out.update({f"{c}{suffix}": n for c, n in got.items()})
     return out, {"^KS11": "KOSPI", "^KQ11": "KOSDAQ"}, {}   # KR themes come from Naver
 
 
@@ -200,12 +238,12 @@ def screen(market, kr_top):
 
 
 def top_picks(df, top):
-    picks = df[df["signal"].isin(["STRONG", "STRONGER"]) & df["above_ma20"]]
+    picks = df[df["signal"].isin(["STRONG", "STRONGER"])]
     return picks.sort_values("score", ascending=False).head(top)
 
 
 # ---------------------------------------------------------------- themes
-def naver_themes(cache_days=7):
+def naver_themes(cache_days=1 / 24):   # 1 hour / 1시간
     """Map 6-digit KR code -> list of Naver theme names. Cached to JSON."""
     cache = HERE / "naver_themes.json"
     if cache.exists() and time.time() - cache.stat().st_mtime < cache_days * 86400:
@@ -351,7 +389,7 @@ $("#strong").addEventListener("change", search);
 """
 
 
-def to_html(top, all_df, path):
+def to_html(top, all_df, path, problems=()):
     cols = ["market", "ticker", "name", "index", "signal", "score", "price",
             "ma20_slope_%", "idx_ma20_slope_%", "rs_20d_%", "themes"]
     head = "".join(f"<th>{c}</th>" for c in cols + ["news / AI"])
@@ -371,6 +409,11 @@ def to_html(top, all_df, path):
             for _, r in all_df.iterrows()] if not all_df.empty else []
     js = SEARCH_JS.replace("__DATA__", json.dumps(data, ensure_ascii=False)
                            .replace("</", "<\\/"))
+    warn = ("<div style='background:#ffebe9;border:1px solid #cf222e;padding:10px;"
+            "border-radius:6px'><b>⚠️ Markets that failed / 실패한 시장:</b><br>"
+            + "<br>".join(html.escape(p) for p in problems) + "</div>") if problems else ""
+    counts = all_df["market"].value_counts().to_dict() if not all_df.empty else {}
+    count_txt = " · ".join(f"{k} {v}" for k, v in counts.items())
     limits = ", ".join(f"{k} ≥ {v:,}" for k, v in MIN_PRICE.items())
 
     path.write_text(f"""<!doctype html><meta charset="utf-8">
@@ -384,6 +427,7 @@ tr.strong td{{background:#eaf7ea}}td:last-child{{max-width:420px}}
 .chip{{display:inline-block;background:#ddf4ff;border-radius:10px;padding:1px 8px;margin:2px;
 cursor:pointer;font-size:12px}}.chip:hover{{background:#b6e3ff}}</style>
 <h2>Stocks stronger than the index / 지수보다 강한 종목 — {dt.date.today()}</h2>
+<p>Stocks loaded / 불러온 종목: {count_txt}</p>{warn}
 
 <div class="box">
 <b>🔍 Search stock or theme / 종목·테마 검색</b><br>
@@ -417,12 +461,18 @@ def main():
     ap.add_argument("--model", default="claude-sonnet-5-5")
     a = ap.parse_args()
 
-    parts = []
+    parts, problems = [], []
     for m in a.markets:
         try:
             parts.append(screen(m.upper(), a.kr_top))
         except Exception as e:  # one market failing should not stop the others
             print(f"[{m}] ERROR: {type(e).__name__}: {e}")
+            problems.append(f"{m}: {type(e).__name__}: {e}")
+    parts = [p for p in parts if not p.empty]
+    for m in a.markets:
+        if not any((p["market"] == m.upper()).any() for p in parts) and \
+                not any(x.startswith(m) for x in problems):
+            problems.append(f"{m}: no data (check terminal)")
     all_df = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
     stamp = dt.date.today().strftime("%Y%m%d")
     out_csv, out_html = HERE / f"strong_{stamp}.csv", HERE / f"strong_{stamp}.html"
@@ -454,7 +504,7 @@ def main():
 
     top.drop(columns=["news", "tags"]).to_csv(out_csv, index=False, encoding="utf-8-sig")
     all_df.drop(columns=["tags"]).to_csv(out_all, index=False, encoding="utf-8-sig")
-    to_html(top, all_df, out_html)
+    to_html(top, all_df, out_html, problems)
     if not top.empty:
         print(top[["market", "ticker", "name", "signal", "score", "rs_20d_%"]]
               .to_string(index=False))

@@ -1,6 +1,7 @@
 yfinance
-finance-datareader
+finance-datareader  # backup only
 pandas
 requests
 lxml
 anthropic
+streamlit>=1.45
