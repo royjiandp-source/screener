@@ -165,6 +165,15 @@ def value_rows(report,static=False):
     return ''.join(rows) or f'<tr><td colspan="11" class="empty">{number(report["min_score"],digits=0)}점 이상이며 평가 가능한 기업이 없습니다. 전체 목록과 기업 평가 상태를 확인하세요.</td></tr>'
 
 
+def news_candidate_section(report):
+    cards=[]
+    for r in report.get('news_candidates',[]):
+        item=r['listing']
+        cards.append(f'<article class="news-card"><h3>{E(item["name"])} <small>{E(item["ticker"])} · {E(COUNTRIES[item["market"]]["name"])}</small></h3><a href="{E(r["url"])}" target="_blank" rel="noopener">{E(r["title"])}</a><p>{E(" · ".join(r["signals"]))}</p><small>{E(r["source"])} · {E(r["published"])}<br>{E(r["basis"])}</small><span class="badge mixed">{E(r["status"])}</span></article>')
+    body=''.join(cards) or '<p class="empty">최근 14일의 저장 기사에서 기업명이 직접 연결되고 가격 하한을 충족한 뉴스 후보가 없습니다.</p>'
+    return '<section id="news-candidates-panel"><h2>뉴스 근거 후보</h2><p class="note">기존 두 분석과 별도인 검토 목록입니다. 최근 14일 기사 제목의 호재 키워드로 발굴하며, 실제 수혜·공시 일치 여부는 확인이 필요합니다. 점수와 매매 검토 가격에 반영하지 않습니다.</p><div class="news-grid">'+body+'</div></section>'
+
+
 def coverage_text(report):
     labels=[]
     for code,c in report['coverage'].items():
@@ -176,7 +185,7 @@ def coverage_text(report):
 
 
 def fragments(report):
-    return {'observations':observation_rows(report),'values':value_rows(report),'coverage':coverage_text(report)}
+    return {'observations':observation_rows(report),'values':value_rows(report),'coverage':coverage_text(report),'news':news_candidate_section(report)}
 
 
 def table(kind, headers, body):
@@ -219,5 +228,5 @@ def render(report,static=False):
 <section id="value-panel" hidden aria-labelledby="value-title"><div class="section-heading"><span class="step">02</span><div><h2 id="value-title">가치투자 고득점 기업</h2><p class="muted">거래소 전체 목록 → 가치투자 지표 평가 → 높은 점수의 기업</p></div></div>
 {value_filter}<p class="note">섹터 검색과 독립된 전체 기업 기준 · 가치평가 35 / 사업 품질 25 / 재무 20 / 자본배분 10 / 성장 10 · 자료 부족·검토 보류·전용 모형 필요 기업 제외</p>
 <p class="note" id="value-summary">{value_caption}</p>{val}{pagination('value')}</section>
-{import_controls}<div id="detail-panel" class="detail-panel" hidden></div><footer>기준 시각 {E(report['generated'])} · 기업명을 펼치면 출처·가정·자료 상태를 볼 수 있습니다. 실제 자료가 없는 항목은 미확인으로 표시됩니다.</footer>
+{news_candidate_section(report)}{import_controls}<div id="detail-panel" class="detail-panel" hidden></div><footer>기준 시각 {E(report['generated'])} · 기업명을 펼치면 출처·가정·자료 상태를 볼 수 있습니다. 실제 자료가 없는 항목은 미확인으로 표시됩니다.</footer>
 </main></body></html>'''

@@ -10,6 +10,7 @@ from .signals.leadership import leadership
 from .valuation import finite
 from .research import price_levels
 from .eligibility import eligible_price
+from .news_candidates import build_news_candidates
 
 CORPORATE_TYPES = ('stock', 'adr')
 ADJUSTED = 'dividend_and_split_adjusted_fund_proxy'
@@ -181,4 +182,4 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
                           'complete':bool(snapshot and snapshot['complete']), 'as_of':snapshot['observed_at'] if snapshot else None,
                           'source':snapshot['source'] if snapshot else None, 'status':source_health.get(code,{}).get('status','not_collected')}
     return {'generated':now().isoformat(timespec='minutes'), 'selected_market':market, 'query':query, 'min_score':min_score,
-            'observations':_page(rows,observation_offset,limit), 'value_candidates':_page(values,value_offset,limit), 'coverage':coverage}
+            'observations':_page(rows,observation_offset,limit), 'value_candidates':_page(values,value_offset,limit), 'coverage':coverage, 'news_candidates':build_news_candidates(con,corporations,price_eligible)}
