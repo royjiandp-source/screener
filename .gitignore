@@ -2,6 +2,5 @@ __pycache__/
 .DS_Store
 screener_backup.py
 naver_themes.json
-/docs
 /strong_*.html
 /strong_*.csv
