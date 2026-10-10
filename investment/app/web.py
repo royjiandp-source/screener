@@ -113,6 +113,20 @@ def flow_summary(records):
     return '<div class="flow-lines">'+''.join(lines)+'</div>'
 
 
+def compact_row(r,fields,labels,score,static,observed=False):
+    item=r['listing'];p=r.get('price_levels',{})
+    chart=monthly_chart(r.get('price_1m') or r.get('checks',{}).get('strength',{}).get('signals',{}).get('price_1m'))
+    confirmed=sum(c.get('status')!='unknown' for c in r.get('checks',{}).values())
+    coverage=f'자료 확인 {confirmed}/6' if observed else '자료 충족 '+pct(r['analysis'].get('coverage'))
+    detail='<details class="evidence"><summary>'+E(coverage)+' · 상세 근거</summary><div class="evidence-grid">'+''.join('<section><h3>'+E(label)+'</h3>'+field+'</section>' for label,field in zip(labels,fields))+'</div>'+evidence_detail(r)+research_detail(r)+'</details>'
+    select='' if static else f'<input type="checkbox" data-listing="{E(item["id"])}" aria-label="{E(item["name"])} 선택"> '
+    name=select+'<strong>'+E(item['name'])+'</strong><small>'+E(COUNTRIES[item['market']]['name'])+' · '+E(item['ticker'])+'<br>'+E(r.get('sector') or '')+'</small>'
+    action='' if static else f'<button class="text-button" type="button" data-detail="{E(item["id"])}">관찰·기관 상세</button>'
+    values=[name,number(p.get('current'))+'<small>'+E(p.get('currency'))+'</small>',chart,'<strong class="score">'+number(score)+'</strong>',number(p.get('buy_review')),number(p.get('sell_review')),detail+action]
+    headings=['기업','현재가','최근 1개월','점수','매수 검토가','매도 검토가','자료·근거']
+    return '<tr>'+''.join(f'<td data-label="{E(label)}">{value}</td>' for label,value in zip(headings,values))+'</tr>'
+
+
 def observation_rows(report, static=False):
     rows=[]
     for r in report['observations']['items']:
@@ -134,7 +148,7 @@ def observation_rows(report, static=False):
              badge(e)+'<div>'+estimates+f'<small>{E(e.get("source"))} {E(e.get("as_of"))}</small></div>',
              badge(c['strength'])+'<div>'+strength+'</div>',badge(b)+'<div>'+breadth+'</div>',badge(p)+'<div>'+price+('<small>'+E(price_reason)+'</small>' if price_reason else '')+'</div>',
              '<strong>'+number(r['leadership']['score'])+'</strong><small>상대강도 40 · 실적 40 · 유동성 20</small>']
-        rows.append('<tr>'+''.join('<td>'+value+'</td>' for value in row)+'</tr>')
+        rows.append(compact_row(r,row[4:11],['ETF·기관 근거','수요 회복','이익 개선','예상 실적 상향','시장 대비 강세','상승의 확산','가격 부담'],r['leadership']['score'],static,True))
     return ''.join(rows) or '<tr><td colspan="12" class="empty">검색 결과가 없습니다. 목록·분류 자료를 수집하거나 다른 검색어를 입력하세요.</td></tr>'
 
 
@@ -147,7 +161,7 @@ def value_rows(report,static=False):
                 number(m.get('ocf'))+' / '+number(m.get('fcf'))+'<small>'+E(m.get('financial_currency') or m.get('currency'))+'</small>',
                 number(m.get('revenue_growth'),'%')+' / '+number(m.get('eps_growth'),'%'),
                 pct(a.get('coverage'))+'<small>'+E(m.get('official_verification',{}).get('status','미검증'))+'<br>'+E(a.get('day'))+'</small>']
-        rows.append('<tr>'+''.join('<td>'+v+'</td>' for v in fields)+'</tr>')
+        rows.append(compact_row(r,fields[4:],['안전마진','ROIC','영업이익률','부채비율','영업현금흐름 / FCF','매출 / EPS 성장','자료 충족률·검증'],a['total'],static))
     return ''.join(rows) or f'<tr><td colspan="11" class="empty">{number(report["min_score"],digits=0)}점 이상이며 평가 가능한 기업이 없습니다. 전체 목록과 기업 평가 상태를 확인하세요.</td></tr>'
 
 
@@ -183,24 +197,26 @@ def render(report,static=False):
                   'labels':list({e['label'] for e in r['listing']['evidence']}), 'evidence':' '.join([e['evidence'] for e in r['listing']['evidence']]+[str(k) for e in r['listing']['evidence'] for k in [*themes.get(e['label'],{}).get('keywords',[]),*themes.get(e['label'],{}).get('industries',[])]]),
                   'industries':list({e['label'] for e in r['listing']['evidence'] if e['kind']=='industry'}),
                   'html':observation_rows({'observations':{'items':[r]}},True)} for r in report.get('static_observations',report['observations']['items'])]
-        payload=json.dumps(dataset,ensure_ascii=False).replace('<','\\u003c')
+        payload=json.dumps(dataset,ensure_ascii=False).replace('<','\u003c')
         scripts='<script id="static-results" type="application/json">'+payload+'</script><script>'+Path(__file__).with_name('static-search.js').read_text()+'</script>'
 
     pagination=lambda track: ('<div class="pagination"><button id="static-prev" type="button">이전</button><button id="static-next" type="button">다음</button></div>' if track=='observation' else '') if static else f'<div class="pagination"><button class="secondary" data-page="{track}" data-direction="-1">이전</button><span id="{track}-count"></span><button class="secondary" data-page="{track}" data-direction="1">다음</button></div>'
-    obs=table('observations',['선택','시장','섹터','후보 기업','ETF·기관 근거','수요 회복','이익 개선','예상 실적 상향','시장 대비 강세','상승의 확산','가격 부담','관찰 점수'],observation_rows(report,static))
-    val=table('values',['시장','기업','섹터','가치 점수 /100','안전마진','ROIC','영업이익률','부채비율','영업현금흐름 / FCF','매출 / EPS 성장','자료 충족률·검증'],value_rows(report,static))
+    headers=['기업','현재가','최근 1개월','점수','매수 검토가','매도 검토가','자료·근거']
+    obs=table('observations',headers,observation_rows(report,static))
+    val=table('values',headers,value_rows(report,static))
+    scripts+='<script>'+Path(__file__).with_name('layout.js').read_text()+'</script>'
     import_controls=controls(static)
     observation_caption=f'현재 표시 {len(report["observations"]["items"]):,}개 / 검색 결과 {report["observations"]["total"]:,}개'
     value_caption=f'현재 표시 {len(report["value_candidates"]["items"]):,}개 / 기준 충족 {report["value_candidates"]["total"]:,}개'
     return f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="report-generated" content="{E(report['generated'])}"><title>시장 탐색 · 섹터와 가치투자</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Cpath fill=%27%230075de%27 d=%27M2 10h3v4H2zm5-4h3v8H7zm5-4h3v12h-3z%27/%3E%3C/svg%3E"><style>{css}</style>{scripts}</head><body><main>
 <header><p class="eyebrow">KR / SG / US · INVESTMENT SCREENER</p><h1>섹터의 변화에서, 기업의 가치까지</h1><p class="muted">자금·실적·가격의 근거로 후보를 좁히고, 전체 상장 목록에서 가치 점수가 높은 기업을 확인합니다.</p></header>
-{selection}<div id="coverage" class="coverage">{coverage_text(report)}</div><p id="global-state" role="status"></p>
-<section aria-labelledby="observation-title"><div class="section-heading"><span class="step">01</span><div><h2 id="observation-title">섹터·주도주 후보</h2><p class="muted">ETF·기관 분석 → 섹터 검색·평가 → 주도주 후보 지표</p></div></div>
-{search}<p class="note">가격 하한: 한국 5,000원 · 싱가포르 S$1 · 미국 US$5. 가격·통화 미확인 종목은 제외합니다. 관련주는 확인된 업종 분류 기준입니다.</p><div class="workflow-actions">{'' if static else '<button type="button" id="show-funds" class="secondary">ETF·기관 자료 조회</button><button type="button" id="enrich-all" class="secondary">검색 결과 관찰 자료 수집</button><button type="button" id="enrich-selected" class="secondary">선택 종목·ETF 자료 수집</button><button type="button" id="evaluate-selected" class="secondary">선택 종목 가치평가</button>'}</div>
+{selection}{search}<details class="coverage-details"><summary>시장별 자료 수집 상태</summary><div id="coverage" class="coverage">{coverage_text(report)}</div></details><nav class="result-tabs" aria-label="분석 흐름"><button type="button" data-tab="observation-panel" aria-pressed="true">섹터·주도주</button><button type="button" data-tab="value-panel" aria-pressed="false">가치투자</button></nav><p id="global-state" role="status"></p>
+<section id="observation-panel" aria-labelledby="observation-title"><div class="section-heading"><span class="step">01</span><div><h2 id="observation-title">섹터·주도주 후보</h2><p class="muted">ETF·기관 분석 → 섹터 검색·평가 → 주도주 후보 지표</p></div></div>
+<p class="note">가격 하한: 한국 5,000원 · 싱가포르 S$1 · 미국 US$5. 가격·통화 미확인 종목은 제외합니다. 관련주는 확인된 업종 분류 기준입니다.</p><div class="workflow-actions">{'' if static else '<button type="button" id="show-funds" class="secondary">ETF·기관 자료 조회</button><button type="button" id="enrich-all" class="secondary">검색 결과 관찰 자료 수집</button><button type="button" id="enrich-selected" class="secondary">선택 종목·ETF 자료 수집</button><button type="button" id="evaluate-selected" class="secondary">선택 종목 가치평가</button>'}</div>
 <div id="funds-panel"></div><p class="note">관찰 점수는 상대강도·실적·유동성 기준입니다. 여섯 신호 전체의 종합점수가 아니며, 미확인 항목은 상세 근거로 확인하세요.</p>
 <p class="note" id="observation-summary">{observation_caption}</p>{obs}{pagination('observation')}<details class="guide"><summary>여섯 가지 신호의 확인 기준</summary><dl>
 <dt>수요 회복</dt><dd>신규 수주·판매량 증가, 재고 감소, 제품 가격 상승</dd><dt>이익 개선</dt><dd>매출뿐 아니라 영업이익률·현금흐름도 개선되는지</dd><dt>예상 실적 상향</dt><dd>같은 기간의 이익 전망을 올리는 기업이 섹터 안에서 늘어나는지</dd><dt>시장 대비 강세</dt><dd>최근 3·6개월의 배당·분할 조정 수익률이 시장 비교 ETF보다 높은지</dd><dt>상승의 확산</dt><dd>대표 종목 외에 여러 관련 기업이 함께 오르는지 · 확보 표본과 전체 기업 수 확인</dd><dt>가격 부담</dt><dd>좋아질 실적을 현재 주가가 이미 과도하게 반영했는지 · 가치 시나리오와 주가 내재 성장률 확인</dd></dl></details></section>
-<section aria-labelledby="value-title"><div class="section-heading"><span class="step">02</span><div><h2 id="value-title">가치투자 고득점 기업</h2><p class="muted">거래소 전체 목록 → 가치투자 지표 평가 → 높은 점수의 기업</p></div></div>
+<section id="value-panel" hidden aria-labelledby="value-title"><div class="section-heading"><span class="step">02</span><div><h2 id="value-title">가치투자 고득점 기업</h2><p class="muted">거래소 전체 목록 → 가치투자 지표 평가 → 높은 점수의 기업</p></div></div>
 {value_filter}<p class="note">섹터 검색과 독립된 전체 기업 기준 · 가치평가 35 / 사업 품질 25 / 재무 20 / 자본배분 10 / 성장 10 · 자료 부족·검토 보류·전용 모형 필요 기업 제외</p>
 <p class="note" id="value-summary">{value_caption}</p>{val}{pagination('value')}</section>
 {import_controls}<div id="detail-panel" class="detail-panel" hidden></div><footer>기준 시각 {E(report['generated'])} · 기업명을 펼치면 출처·가정·자료 상태를 볼 수 있습니다. 실제 자료가 없는 항목은 미확인으로 표시됩니다.</footer>
