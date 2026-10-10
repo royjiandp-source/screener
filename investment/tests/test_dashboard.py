@@ -17,6 +17,7 @@ def listing(code='ABC', market='US', kind='stock'):
     suffix = {'US': '', 'KR': '.KS', 'SG': '.SI', 'JP': '.T'}[market]
     return dict(id=f'{market}:{exchange}:{code}:{kind}', market=market, exchange=exchange,
                 code=code, ticker=code+suffix, name='Example '+code, type=kind,
+                price={'US':100,'KR':10000,'SG':10,'JP':1000}[market],
                 currency={'US': 'USD', 'KR': 'KRW', 'SG': 'SGD', 'JP': 'JPY'}[market])
 
 
@@ -150,7 +151,7 @@ def test_removed_logic_api_and_two_table_empty_ui(con):
         assert label in page
     static=render(pipeline.report(con),static=True)
     assert static.count('data-result-table=')==2 and 'fetch(' not in static
-    assert '<button' not in static
+    assert 'id="sector-query"' in static and 'id="static-results"' in static
 
 
 def test_daily_score_uses_catalog_and_never_seed_universe(con,monkeypatch):

@@ -262,7 +262,8 @@ def report(con, market=None, **filters) -> dict:
 def static_report(con):
     # Value candidates must never disappear behind inaccessible static pagination.
     result = report(con, limit=1000000)
-    result['observations']['items'] = result['observations']['items'][:50]
+    result['static_observations'] = result['observations']['items']
+    result['observations']['items'] = result['static_observations'][:50]
     return result
 
 

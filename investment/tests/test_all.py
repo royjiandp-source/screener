@@ -98,7 +98,7 @@ def test_pipeline_and_api(env):
     # static export used by GitHub Pages
     from app.web import render
     html = render(pipeline.report(pipeline.connect()), static=True)
-    assert "<button" not in html and "가치투자 고득점 기업" in html
+    assert 'id="sector-query"' in html and "가치투자 고득점 기업" in html
 
 
 def test_financials_fetch_math(monkeypatch):

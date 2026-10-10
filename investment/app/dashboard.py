@@ -9,6 +9,7 @@ from .filings.common import utc
 from .signals.leadership import leadership
 from .valuation import finite
 from .research import price_levels
+from .eligibility import eligible_price
 
 CORPORATE_TYPES = ('stock', 'adr')
 ADJUSTED = 'dividend_and_split_adjusted_fund_proxy'
@@ -35,8 +36,10 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
     if not finite(min_score) or not 0 <= min_score <= 100:
         raise ValueError('점수는 0~100 사이여야 합니다.')
     init(con)
-    catalog = search(con, '', market, limit=1000000)['items']
-    matched = {x['id']:x for x in (search(con, query, market, limit=1000000)['items'] if query.strip() else catalog)}
+    all_catalog = search(con, '', None, limit=1000000)['items']
+    catalog = [x for x in all_catalog if not market or x['market']==market]
+    fund_ids = {x['id'] for x in all_catalog if x['type']=='etf'}
+    matched = {x['id']:x for x in (search(con, query, market, limit=1000000, related=True)['items'] if query.strip() else catalog)}
     by_id = {x['id']: x for x in catalog}
     corporations = [x for x in catalog if x['type'] in CORPORATE_TYPES]
     analyses = {}
@@ -47,11 +50,13 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
     latest = {}
     cutoff = utc()
     for row in con.execute('SELECT * FROM flow_snapshots WHERE observed_at<=? AND available_at<=? ORDER BY period DESC,available_at DESC,id DESC', (cutoff, cutoff)):
-        if row['listing_id'] not in by_id:
+        if row['listing_id'] not in by_id and row['listing_id'] not in fund_ids:
             continue
         record = {**dict(row), 'data': loads(row['data'], {})}
         records[row['listing_id']].append(record)
         latest.setdefault((row['listing_id'], row['kind']), record)
+
+    price_eligible = {x['id'] for x in corporations if eligible_price(x,analyses.get((x['market'],x['ticker']),{}),latest.get((x['id'],'research_opinions'),{}).get('data',{}))}
 
     observations = {}
     rank_pools = defaultdict(list)
@@ -75,19 +80,14 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
     values = []
     for item in corporations:
         a = analyses.get((item['market'], item['ticker']), {})
-        if a.get('score_version') == 'value-v1' and a.get('analysis_status') == 'analyzable' and finite(a.get('total')) and a['total'] >= min_score:
+        if item['id'] in price_eligible and a.get('score_version') == 'value-v1' and a.get('analysis_status') == 'analyzable' and finite(a.get('total')) and a['total'] >= min_score:
             values.append({'listing': item, 'analysis': a, 'price_1m':observations[item['id']][1].get('price_1m'), 'research':latest.get((item['id'],'research_opinions'),{}).get('data',{}), 'price_levels':price_levels(a,latest.get((item['id'],'research_opinions'),{}).get('data',{}))})
     values.sort(key=lambda r: (-r['analysis']['total'], r['listing']['market'], r['listing']['code']))
 
     fund_by_ticker = defaultdict(list)
     fund_by_sector = defaultdict(list)
     fund_by_listing = defaultdict(list)
-    fund_catalog = search(con, '', None, limit=1000000)['items'] if market else catalog
-    # Read foreign fund snapshots as well; links require resolved company identities.
-    fund_ids = {f['id'] for f in fund_catalog if f['type']=='etf'}
-    for row in con.execute('SELECT * FROM flow_snapshots WHERE observed_at<=? AND available_at<=? ORDER BY period DESC,available_at DESC,id DESC',(cutoff,cutoff)):
-        if row['listing_id'] in fund_ids:
-            latest.setdefault((row['listing_id'],row['kind']),{**dict(row),'data':loads(row['data'],{})})
+    fund_catalog = all_catalog
     for fund in fund_catalog:
         if fund['type']!='etf':
             continue
@@ -103,7 +103,7 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
     breadth_cache = {}
     rows = []
     for item in corporations:
-        if item['id'] not in matched:
+        if item['id'] not in matched or item['id'] not in price_eligible:
             continue
         lid = item['id']
         data, signals = observations[lid]
@@ -165,13 +165,15 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
                 if rec:
                     links.append({**rec, 'fund':fund['ticker'], 'weight':weight, 'relation':'holdings' if weight is not None else 'sector'})
         rows.append({'research':latest.get((lid,'research_opinions'),{}).get('data',{}),'price_levels':price_levels(analysis,latest.get((lid,'research_opinions'),{}).get('data',{})), 'listing':item, 'sector':sector, 'checks':checks, 'leadership':observed, 'analysis':analysis, 'etf_institution':links})
-    rows.sort(key=lambda r: (-(r['leadership']['score'] if finite(r['leadership']['score']) else -1), -len(r['etf_institution']), r['listing']['market'],r['listing']['code']))
+    direct_ids = {x['id'] for x in corporations if query.strip() and (query.strip().casefold() in x['name'].casefold() or query.strip().casefold() in (x['ticker'].casefold(),x['code'].casefold()))}
+    rows.sort(key=lambda r: (bool(query.strip()) and r['listing']['id'] not in direct_ids, -(r['leadership']['score'] if finite(r['leadership']['score']) else -1), -len(r['etf_institution']), r['listing']['market'],r['listing']['code']))
     source_health = health(con)
     coverage = {}
     for code in SEARCH_MARKETS:
         subset = [x for x in corporations if x['market']==code]
         snapshot = con.execute('SELECT complete,source,observed_at FROM catalog_snapshots WHERE market=? ORDER BY active DESC,id DESC LIMIT 1',(code,)).fetchone()
         coverage[code] = {'listings':len([x for x in catalog if x['market']==code]), 'companies':len(subset),
+                          'price_eligible':sum(x['id'] in price_eligible for x in subset),
                           'signals_collected':sum(bool(observations[x['id']][0]) for x in subset),
                           'signal_failures':sum(latest.get((x['id'],'signal_collection_status'),{}).get('data',{}).get('status')=='failed' for x in subset),
                           'analyzed':sum(bool(analyses.get((code,x['ticker']))) for x in subset),

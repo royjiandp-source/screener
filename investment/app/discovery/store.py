@@ -59,7 +59,7 @@ def classify(con,listing_id,label,kind,source,evidence,available_at):
 
 
 
-def search(con,query,market=None,offset=0,limit=50):
+def search(con,query,market=None,offset=0,limit=50,related=False):
     init(con)
     if market and market not in SEARCH_MARKETS: raise ValueError('Unsupported search market')
     q=query.strip().casefold()
@@ -84,6 +84,17 @@ def search(con,query,market=None,offset=0,limit=50):
         if evidence: classified+=1
         if not q or q == r['ticker'].casefold() or matches(r['name']) or any(e['label'] in labels or matches(e['label']) or matches(e['evidence']) for e in evidence):
             found.append({**r,'evidence':evidence,'matched_labels':[e['label'] for e in evidence if q and (e['label'] in labels or matches(e['label']) or matches(e['evidence']))]})
+    if related and q:
+        direct=[r for r in found if matches(r['name']) or q==r['ticker'].casefold() or q==r['code'].casefold()]
+        peer_labels={(r['market'],e['label']) for r in direct for e in r['evidence'] if e['kind']=='industry'}
+        seen={r['id'] for r in found}
+        for row in records:
+            if row['id'] in seen:continue
+            r=loads(row['data'],{});evidence=evidence_by_id.get(row['id'],[])
+            matched=[e['label'] for e in evidence if (r['market'],e['label']) in peer_labels]
+            if matched:found.append({**r,'evidence':evidence,'matched_labels':matched})
+        direct_ids={r['id'] for r in direct}
+        found.sort(key=lambda r:r['id'] not in direct_ids)
     snapshots={r['market']:r['id'] for r in con.execute('SELECT id,market FROM catalog_snapshots WHERE active=1')}
     return {'items':found[offset:offset+limit],'total':len(found),'classified':classified,'total_listings':len(records),'catalog_snapshots':snapshots,'status':'available' if records else 'not_collected'}
 

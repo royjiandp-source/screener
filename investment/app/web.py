@@ -1,11 +1,13 @@
 """Korean two-track screening dashboard and static report rendering."""
 import html
+import json
 from pathlib import Path
 
 from .countries import COUNTRIES, SEARCH_MARKETS
 from .discovery.ui import controls
 from .valuation import finite
 from .research import public_reports
+from .db import load_themes
 
 E = lambda value: html.escape('' if value is None else str(value), quote=True)
 STATUS = {'unknown':'미확인','improving':'개선','mixed':'혼재','weakening':'악화'}
@@ -171,11 +173,20 @@ def render(report,static=False):
     market=report.get('selected_market') or ''
     options='<option value="">전체 시장</option>'+''.join(f'<option value="{code}"'+(' selected' if code==market else '')+f'>{E(COUNTRIES[code]["name"])}</option>' for code in SEARCH_MARKETS)
     selection=f'<form id="market-form"><label>검색 시장 <select id="market">{options}</select></label><button type="submit">적용</button><button type="button" id="catalog-refresh" class="secondary">선택 시장 목록 갱신</button></form>' if not static else '<p>'+E(COUNTRIES.get(market,{}).get('name','한국 · 싱가포르 · 미국'))+'</p>'
-    search=f'<form id="sector-form"><label class="grow">섹터·기업 검색 <input id="sector-query" placeholder="반도체, AI, 전력, 기업명·종목 코드" maxlength="100" value="{E(report.get("query"))}"></label><button>검색</button></form>' if not static else '<p>섹터 검색: '+E(report.get('query') or '전체')+'</p>'
+    search=f'<form id="sector-form"><label class="grow">섹터·기업 검색 <input id="sector-query" placeholder="반도체, AI, 전력, 기업명·종목 코드" maxlength="100" value="{E(report.get("query"))}"></label><button>검색</button></form>' if not static else f'<form id="sector-form"><label>시장 <select id="static-market">{options}</select></label><label class="grow">종목·섹터 검색 <input id="sector-query" placeholder="삼성전자, 반도체, AI" maxlength="100"></label><button>검색</button></form>'
     value_filter=f'<form id="value-form"><label>최소 점수 <input id="min-score" type="number" min="0" max="100" step="0.1" value="{E(report["min_score"])}"></label><button>적용</button><button type="button" id="evaluate-market" class="secondary">전체 기업 가치평가</button></form>' if not static else f'<p>최소 점수 {number(report["min_score"])} /100</p>'
     css=(Path(__file__).parent/'dashboard.css').read_text()
-    scripts='' if static else '<script src="assets/dashboard.js" defer></script>'
-    pagination=lambda track: '' if static else f'<div class="pagination"><button class="secondary" data-page="{track}" data-direction="-1">이전</button><span id="{track}-count"></span><button class="secondary" data-page="{track}" data-direction="1">다음</button></div>'
+    scripts='<script src="assets/dashboard.js" defer></script>'
+    if static:
+        themes=load_themes()['themes']
+        dataset=[{'id':r['listing']['id'],'name':r['listing']['name'],'market':r['listing']['market'],'ticker':r['listing']['ticker'],'code':r['listing']['code'],
+                  'labels':list({e['label'] for e in r['listing']['evidence']}), 'evidence':' '.join([e['evidence'] for e in r['listing']['evidence']]+[str(k) for e in r['listing']['evidence'] for k in [*themes.get(e['label'],{}).get('keywords',[]),*themes.get(e['label'],{}).get('industries',[])]]),
+                  'industries':list({e['label'] for e in r['listing']['evidence'] if e['kind']=='industry'}),
+                  'html':observation_rows({'observations':{'items':[r]}},True)} for r in report.get('static_observations',report['observations']['items'])]
+        payload=json.dumps(dataset,ensure_ascii=False).replace('<','\\u003c')
+        scripts='<script id="static-results" type="application/json">'+payload+'</script><script>'+Path(__file__).with_name('static-search.js').read_text()+'</script>'
+
+    pagination=lambda track: ('<div class="pagination"><button id="static-prev" type="button">이전</button><button id="static-next" type="button">다음</button></div>' if track=='observation' else '') if static else f'<div class="pagination"><button class="secondary" data-page="{track}" data-direction="-1">이전</button><span id="{track}-count"></span><button class="secondary" data-page="{track}" data-direction="1">다음</button></div>'
     obs=table('observations',['선택','시장','섹터','후보 기업','ETF·기관 근거','수요 회복','이익 개선','예상 실적 상향','시장 대비 강세','상승의 확산','가격 부담','관찰 점수'],observation_rows(report,static))
     val=table('values',['시장','기업','섹터','가치 점수 /100','안전마진','ROIC','영업이익률','부채비율','영업현금흐름 / FCF','매출 / EPS 성장','자료 충족률·검증'],value_rows(report,static))
     import_controls=controls(static)
@@ -185,7 +196,7 @@ def render(report,static=False):
 <header><p class="eyebrow">KR / SG / US · INVESTMENT SCREENER</p><h1>섹터의 변화에서, 기업의 가치까지</h1><p class="muted">자금·실적·가격의 근거로 후보를 좁히고, 전체 상장 목록에서 가치 점수가 높은 기업을 확인합니다.</p></header>
 {selection}<div id="coverage" class="coverage">{coverage_text(report)}</div><p id="global-state" role="status"></p>
 <section aria-labelledby="observation-title"><div class="section-heading"><span class="step">01</span><div><h2 id="observation-title">섹터·주도주 후보</h2><p class="muted">ETF·기관 분석 → 섹터 검색·평가 → 주도주 후보 지표</p></div></div>
-{search}<div class="workflow-actions">{'' if static else '<button type="button" id="show-funds" class="secondary">ETF·기관 자료 조회</button><button type="button" id="enrich-all" class="secondary">검색 결과 관찰 자료 수집</button><button type="button" id="enrich-selected" class="secondary">선택 종목·ETF 자료 수집</button><button type="button" id="evaluate-selected" class="secondary">선택 종목 가치평가</button>'}</div>
+{search}<p class="note">가격 하한: 한국 5,000원 · 싱가포르 S$1 · 미국 US$5. 가격·통화 미확인 종목은 제외합니다. 관련주는 확인된 업종 분류 기준입니다.</p><div class="workflow-actions">{'' if static else '<button type="button" id="show-funds" class="secondary">ETF·기관 자료 조회</button><button type="button" id="enrich-all" class="secondary">검색 결과 관찰 자료 수집</button><button type="button" id="enrich-selected" class="secondary">선택 종목·ETF 자료 수집</button><button type="button" id="evaluate-selected" class="secondary">선택 종목 가치평가</button>'}</div>
 <div id="funds-panel"></div><p class="note">관찰 점수는 상대강도·실적·유동성 기준입니다. 여섯 신호 전체의 종합점수가 아니며, 미확인 항목은 상세 근거로 확인하세요.</p>
 <p class="note" id="observation-summary">{observation_caption}</p>{obs}{pagination('observation')}<details class="guide"><summary>여섯 가지 신호의 확인 기준</summary><dl>
 <dt>수요 회복</dt><dd>신규 수주·판매량 증가, 재고 감소, 제품 가격 상승</dd><dt>이익 개선</dt><dd>매출뿐 아니라 영업이익률·현금흐름도 개선되는지</dd><dt>예상 실적 상향</dt><dd>같은 기간의 이익 전망을 올리는 기업이 섹터 안에서 늘어나는지</dd><dt>시장 대비 강세</dt><dd>최근 3·6개월의 배당·분할 조정 수익률이 시장 비교 ETF보다 높은지</dd><dt>상승의 확산</dt><dd>대표 종목 외에 여러 관련 기업이 함께 오르는지 · 확보 표본과 전체 기업 수 확인</dd><dt>가격 부담</dt><dd>좋아질 실적을 현재 주가가 이미 과도하게 반영했는지 · 가치 시나리오와 주가 내재 성장률 확인</dd></dl></details></section>
