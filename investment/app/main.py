@@ -76,12 +76,16 @@ def health():
 @app.get("/api/report")
 def api_report(market: str | None = Query(None, pattern=MARKET_PATTERN), query: str = Query('', max_length=100),
                min_score: float = Query(60, ge=0, le=100), observation_offset: int = Query(0, ge=0), value_offset: int = Query(0, ge=0),
-               limit: int = Query(50, ge=1, le=100)):
+               limit: int = Query(50, ge=1, le=100),
+               observation_market: str | None = Query(None, pattern=MARKET_PATTERN),
+               value_market: str | None = Query(None, pattern=MARKET_PATTERN),
+               book_market: str | None = Query(None, pattern=MARKET_PATTERN),
+               news_market: str | None = Query(None, pattern=MARKET_PATTERN)):
     con = connect()
     try:
         from .web import fragments
         report = pipeline.report(con, market=market, query=query, min_score=min_score,
-                                 observation_offset=observation_offset, value_offset=value_offset, limit=limit)
+                                 observation_offset=observation_offset, value_offset=value_offset, limit=limit, observation_market=observation_market, value_market=value_market, book_market=book_market, news_market=news_market)
         return {**report, "fragments": fragments(report)}
     finally:
         con.close()

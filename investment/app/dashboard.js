@@ -22,12 +22,12 @@
   async function refresh() {
     const mine = ++revision, p = params();
     const q = new URLSearchParams({query:p.query,min_score:p.min_score,observation_offset:offsets.observation,value_offset:offsets.value});
-    if(p.market) q.set('market',p.market);
+    for(const track of ['observation','value','book','news']){const selected=$(track+'-market').value;if(selected)q.set(track+'_market',selected);}
     try {
       const r = await request('api/report?'+q);
       if(mine!==revision) return;
       for (const [id,key] of [['observation-body','observations'],['value-body','values'],['coverage','coverage'],['book-body','books']]) $(id).innerHTML = r.fragments[key];
-      if(r.fragments.news && $('news-candidates-panel')) {const hidden=$('news-candidates-panel').hidden;$('news-candidates-panel').outerHTML=r.fragments.news;$('news-candidates-panel').hidden=hidden;}
+      if(r.fragments.news && $('news-candidates-panel')) {const hidden=$('news-candidates-panel').hidden;const selected=$('news-market').value;$('news-candidates-panel').outerHTML=r.fragments.news;$('news-candidates-panel').hidden=hidden;$('news-market').value=selected;}
       document.dispatchEvent(new Event('book-results-updated'));
       document.querySelectorAll('[data-listing]').forEach(el => { el.checked=chosen.has(el.dataset.listing); });
       const sources=Object.entries(r.coverage).filter(([market])=>!p.market||market===p.market);
@@ -64,7 +64,8 @@
     clearInterval(timer); timer=setInterval(poll,3000); await poll();
   }
   function catchAction(fn) { return async e => { try { await fn(e); } catch(err) {status(err.message);} }; }
-  $('market-form').onsubmit=catchAction(async e=>{e.preventDefault();offsets.observation=0;offsets.value=0;chosen.clear();$('funds-panel').replaceChildren();await refresh();});
+  document.addEventListener('change',catchAction(async e=>{if(e.target.matches('[data-list-market]')){offsets.observation=0;offsets.value=0;await refresh();}}));
+  $('market-form').onsubmit=catchAction(async e=>{e.preventDefault();document.querySelectorAll('[data-list-market]').forEach(el=>{el.value=$('market').value;});offsets.observation=0;offsets.value=0;chosen.clear();$('funds-panel').replaceChildren();await refresh();});
   $('sector-form').onsubmit=catchAction(async e=>{e.preventDefault();offsets.observation=0;chosen.clear();await refresh();});
   $('value-form').onsubmit=catchAction(async e=>{e.preventDefault();offsets.value=0;await refresh();});
   $('evaluate-market').onclick=catchAction(()=>start('api/discovery/evaluate-market',{market:params().market}));
@@ -128,6 +129,7 @@
     const detail=e.target.closest('[data-detail]');if(detail)await showDetail(detail.dataset.detail);
     const page=e.target.closest('[data-page]');if(page){const track=page.dataset.page;offsets[track]=Math.max(0,offsets[track]+Number(page.dataset.direction)*pages[track].limit);await refresh();}
   }));
+  for(const track of ['observation','value','book','news'])$(track+'-market').value=initial.get(track+'_market')||initial.get('market')||'';
   refresh();if(job){timer=setInterval(poll,3000);poll();}
   // Skip background refresh while the user reads a company detail or the detail panel.
   const reading=()=>document.querySelector('details.company[open]')||!$('detail-panel').hidden;

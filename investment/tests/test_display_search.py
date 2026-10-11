@@ -35,4 +35,4 @@ def test_static_payload_preserves_results_beyond_first_page(con):
     rows=[listing(str(i)) for i in range(55)];catalog(con,rows)
     page=render(static_report(con),static=True)
     data=json.loads(re.search(r'<script id="static-results" type="application/json">(.*?)</script>',page,re.S).group(1))
-    assert len(data)==55 and data[0]['html'].startswith('<tr>')
+    assert len(data)==55 and data[0]['html'].startswith('<tr data-row-market=')

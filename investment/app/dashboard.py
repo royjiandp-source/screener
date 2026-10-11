@@ -36,8 +36,8 @@ def _page(rows, offset, limit):
     return {'items': rows[offset:offset+limit], 'total': len(rows), 'offset': offset, 'limit': limit}
 
 
-def build_report(con, market=None, query='', min_score=60, observation_offset=0, value_offset=0, limit=50):
-    if market and market not in SEARCH_MARKETS:
+def build_report(con, market=None, query='', min_score=60, observation_offset=0, value_offset=0, limit=50, observation_market=None, value_market=None, book_market=None, news_market=None):
+    if any(m and m not in SEARCH_MARKETS for m in (market, observation_market, value_market, book_market, news_market)):
         raise ValueError('지원 시장은 한국·싱가포르·미국입니다.')
     if not finite(min_score) or not 0 <= min_score <= 100:
         raise ValueError('점수는 0~100 사이여야 합니다.')
@@ -206,5 +206,11 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
                       'price_levels':price_levels(analysis, research),
                       'price_1m':newest_chart(latest.get((item['id'],'monthly_chart'),{}).get('data',{}).get('chart'), observations[item['id']][1].get('price_1m'))})
     books.sort(key=lambda r:(not r['assessment']['verified'], r['assessment']['pbr'], r['listing']['market'], r['listing']['code']))
+    def in_market(items, selected):
+        return [r for r in items if not selected or r['listing']['market'] == selected]
+    rows = in_market(rows, observation_market)
+    values = in_market(values, value_market)
+    news = in_market(news, news_market)
+    books = in_market(books, book_market)
     return {'generated':now().isoformat(timespec='minutes'), 'selected_market':market, 'query':query, 'min_score':min_score,
             'observations':_page(rows,observation_offset,limit), 'value_candidates':_page(values,value_offset,limit), 'coverage':coverage, 'news_candidates':news, 'book_candidates':books}

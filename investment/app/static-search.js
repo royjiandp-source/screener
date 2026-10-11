@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const rows=JSON.parse(document.getElementById('static-results').textContent);
-  const input=document.getElementById('sector-query'), market=document.getElementById('static-market');
+  const input=document.getElementById('sector-query'), market=document.getElementById('observation-market');
   const aliases={'반도체':'semiconductor','인공지능':'artificial intelligence','전력':'power','원전':'nuclear','보안':'security','클라우드':'cloud','데이터센터':'data center','로봇':'robot','바이오':'biotech'};
   let offset=0,matched=[];
   const fold=x=>String(x||'').toLowerCase();

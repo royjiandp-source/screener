@@ -42,3 +42,12 @@ def test_report_overlap_uses_all_results_and_latest_metrics(tmp_path, monkeypatc
     assert 'class="overlap-row"' in page
     assert 'data-book-pbr="0.3"' in page
     c.close()
+
+
+def test_missing_provider_pbr_uses_compatible_market_cap_and_equity():
+    m={**metrics(), 'pbr':None,'market_cap':30,'currency':'KRW','financial_currency':'KRW'}
+    assert assess(m)['pbr']==.3
+    assert '계산 PBR' in assess(m)['basis']
+    for changes in [{'financial_currency':'USD'},{'financial_currency':None},{'equity':0},{'market_cap':None},{'share_basis_verified':False}]:
+        assert assess({**m,**changes}) is None
+    assert assess({**m,'pbr':.4})['pbr']==.4

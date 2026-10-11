@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('book-filter-changing',()=>{
     for(const summary of expanded.keys())if(summary.closest('#book-body'))closeInline(summary);
   });
+  document.addEventListener('list-filter-changing',()=>{for(const summary of expanded.keys())closeInline(summary);});
   desktop.addEventListener('change',()=>{
     for(const summary of expanded.keys())closeInline(summary);
     if(dialog.open)dialog.close();
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const input=document.getElementById('max-pbr');
   function updateBooks(){
     document.dispatchEvent(new Event('book-filter-changing'));
-    const market=document.getElementById('static-market')?.value||document.getElementById('market')?.value||'';
+    const market=document.getElementById('book-market')?.value||'';
     const max=Number(input.value);let count=0;
     document.querySelectorAll('#book-body tr[data-book-pbr]').forEach(row=>{
       row.hidden=!(max>0&&max<=5&&Number(row.dataset.bookPbr)<=max&&(!market||row.dataset.bookMarket===market));
@@ -88,7 +89,24 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   document.getElementById('book-form').addEventListener('submit',e=>{e.preventDefault();if(e.target.reportValidity())updateBooks();});
   input.addEventListener('input',updateBooks);
-  document.getElementById('static-market')?.addEventListener('change',updateBooks);
+  document.getElementById('book-market')?.addEventListener('change',updateBooks);
   document.addEventListener('book-results-updated',updateBooks);
   updateBooks();
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!document.getElementById('static-results'))return;
+  function filter(track){
+    const market=document.getElementById(track+'-market').value;
+    const selector=track==='value'?'#value-body tr[data-row-market]':'#news-candidates-panel .news-card';
+    let count=0;
+    const total=document.querySelectorAll(selector).length;
+    document.querySelectorAll(selector).forEach(row=>{row.hidden=!!market&&row.dataset.rowMarket!==market;if(!row.hidden)count++;});
+    document.getElementById(track+'-market-empty').hidden=count>0||total===0;
+    if(track==='value')document.getElementById('value-summary').textContent=`기준 충족 ${count}개 · 선택 국가 기준`;
+  }
+  for(const track of ['value','news']){
+    document.getElementById(track+'-market').addEventListener('change',()=>{document.dispatchEvent(new Event('list-filter-changing'));filter(track);});
+    filter(track);
+  }
 });

@@ -264,3 +264,31 @@ def test_one_bad_etf_row_keeps_other_holdings(con):
     refresh_etf(con, fund, T(), {'navPrice': 10, 'sharesOutstanding': 100, 'currency': 'USD'})
     saved = flows(con, fund['id'], 'etf_holdings')[0]['data']['holdings']
     assert [h['ticker'] for h in saved] == ['BBB']
+
+
+def test_per_list_market_filter_is_independent_and_applied_before_pagination(con):
+    from app.dashboard import build_report
+    from app.db import dumps
+    from app.web import render
+    for market in ['KR','US','SG']:
+        row=listing('ABC'+market,market)
+        catalog(con,[row],market)
+        score(con,row)
+        saved=con.execute('SELECT data FROM stock_scores WHERE ticker=?',(row['ticker'],)).fetchone()
+        import json
+        data=json.loads(saved['data']);data['metrics'].update(pbr=.3,equity=100,op_margin=10,ocf=20,roe=10,debt_ratio=50)
+        con.execute('UPDATE stock_scores SET data=? WHERE ticker=?',(dumps(data),row['ticker']))
+    con.commit()
+    r=build_report(con,observation_market='US',value_market='SG',book_market='KR',limit=1)
+    assert r['observations']['total']==1 and r['observations']['items'][0]['listing']['market']=='US'
+    assert r['value_candidates']['total']==1 and r['value_candidates']['items'][0]['listing']['market']=='SG'
+    assert len(r['book_candidates'])==1 and r['book_candidates'][0]['listing']['market']=='KR'
+    page=render(r,static=True)
+    for track in ['value','book','news','observation']:
+        assert f'data-list-market="{track}"' in page
+    from fastapi.testclient import TestClient
+    from app.main import app
+    c=TestClient(app)
+    response=c.get('/api/report?value_market=SG&book_market=KR&observation_market=US').json()
+    assert response['book_candidates'][0]['listing']['market']=='KR'
+    assert c.get('/api/report?book_market=JP').status_code==422
