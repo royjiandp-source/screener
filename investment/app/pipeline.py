@@ -212,6 +212,9 @@ def run(step: str = "all", markets=MARKETS) -> dict:
             out["signals"] = run_signals(con, markets)
         if step in ("score", "all"):
             out["score"] = run_score(con, markets)
+        if step in ("signals", "score", "all"):
+            from .signals.charts import refresh_charts
+            out["charts"] = refresh_charts(con, markets)
         status, msg = "ok", dumps(out)
     except Exception as e:
         traceback.print_exc()

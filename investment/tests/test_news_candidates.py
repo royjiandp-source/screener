@@ -17,4 +17,4 @@ def test_news_section_is_below_both_existing_flows(con):
     from app.web import render
     page=render(report(con),static=True)
     assert page.index('id="news-candidates-panel"')>page.index('id="value-panel"')
-    assert page.count('data-result-table=')==2
+    assert page.count('data-result-table=')==3

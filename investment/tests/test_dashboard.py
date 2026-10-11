@@ -145,12 +145,12 @@ def test_removed_logic_api_and_two_table_empty_ui(con):
     assert not hasattr(pipeline,'get_macro') and not hasattr(pipeline,'country_table')
     assert 'macro' not in [x[0] for x in con.execute("SELECT name FROM sqlite_master WHERE type='table'")]
     page=c.get('/').text
-    assert page.count('data-result-table=')==2
+    assert page.count('data-result-table=')==3
     assert '국가별 가치투자' not in page and '미국 거시 참고 정보' not in page
     for label in ['수요 회복','이익 개선','예상 실적 상향','시장 대비 강세','상승의 확산','가격 부담']:
         assert label in page
     static=render(pipeline.report(con),static=True)
-    assert static.count('data-result-table=')==2 and 'fetch(' not in static
+    assert static.count('data-result-table=')==3 and 'fetch(' not in static
     assert 'id="sector-query"' in static and 'id="static-results"' in static
 
 

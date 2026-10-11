@@ -26,8 +26,9 @@
     try {
       const r = await request('api/report?'+q);
       if(mine!==revision) return;
-      for (const [id,key] of [['observation-body','observations'],['value-body','values'],['coverage','coverage']]) $(id).innerHTML = r.fragments[key];
-      if(r.fragments.news && $('news-candidates-panel')) $('news-candidates-panel').outerHTML=r.fragments.news;
+      for (const [id,key] of [['observation-body','observations'],['value-body','values'],['coverage','coverage'],['book-body','books']]) $(id).innerHTML = r.fragments[key];
+      if(r.fragments.news && $('news-candidates-panel')) {const hidden=$('news-candidates-panel').hidden;$('news-candidates-panel').outerHTML=r.fragments.news;$('news-candidates-panel').hidden=hidden;}
+      document.dispatchEvent(new Event('book-results-updated'));
       document.querySelectorAll('[data-listing]').forEach(el => { el.checked=chosen.has(el.dataset.listing); });
       const sources=Object.entries(r.coverage).filter(([market])=>!p.market||market===p.market);
       const running=sources.some(([,source])=>source.status==='refreshing');

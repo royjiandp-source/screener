@@ -83,7 +83,7 @@ def test_pipeline_and_api(env):
 
     c = TestClient(app)
     r = c.get("/")
-    assert r.status_code == 200 and "섹터·주도주 후보" in r.text and "가치투자 고득점 기업" in r.text
+    assert r.status_code == 200 and "섹터·주도주 후보" in r.text and "가치투자1 · 고득점 기업" in r.text
     rep = c.get("/api/report").json()
     assert rep['value_candidates']['total']==0
     assert rep['observations']['total']>30
@@ -98,7 +98,7 @@ def test_pipeline_and_api(env):
     # static export used by GitHub Pages
     from app.web import render
     html = render(pipeline.report(pipeline.connect()), static=True)
-    assert 'id="sector-query"' in html and "가치투자 고득점 기업" in html
+    assert 'id="sector-query"' in html and "가치투자1 · 고득점 기업" in html
 
 
 def test_financials_fetch_math(monkeypatch):

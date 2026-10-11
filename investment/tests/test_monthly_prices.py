@@ -1,3 +1,5 @@
+from test_dashboard import con
+
 import pandas as pd
 import pytest
 
@@ -20,3 +22,14 @@ def test_chart_escapes_accessibility_text():
     from app.web import monthly_chart
     chart=monthly_chart({'points':[{'date':'2026-09-01','close':100},{'date':'2026-10-01','close':110}], 'return_pct':10,'start':'2026-09-01','end':'2026-10-01'})
     assert '<svg' in chart and '10.0%' in chart and '2026-10-01' in chart
+
+
+def test_chart_available_without_leadership_profile(con):
+    from test_dashboard import listing,catalog
+    from app.discovery.store import save_flow
+    from app.dashboard import build_report
+    item=listing();catalog(con,[item])
+    chart={'points':[{'date':'2026-09-01','close':100},{'date':'2026-10-01','close':110}],'return_pct':10,'start':'2026-09-01','end':'2026-10-01'}
+    save_flow(con,item['id'],'monthly_chart','2026-10-01',{'chart':chart})
+    row=build_report(con)['observations']['items'][0]
+    assert row['price_1m']==chart and row['leadership']['score'] is None

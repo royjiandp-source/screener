@@ -12,6 +12,11 @@ from .research import price_levels
 from .eligibility import eligible_price
 from .news_candidates import build_news_candidates
 
+def newest_chart(*charts):
+    valid=[c for c in charts if c and len(c.get("points",[]))>=2]
+    return max(valid,key=lambda c:c.get("end","")) if valid else None
+
+
 CORPORATE_TYPES = ('stock', 'adr')
 ADJUSTED = 'dividend_and_split_adjusted_fund_proxy'
 
@@ -82,7 +87,7 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
     for item in corporations:
         a = analyses.get((item['market'], item['ticker']), {})
         if item['id'] in price_eligible and a.get('score_version') == 'value-v1' and a.get('analysis_status') == 'analyzable' and finite(a.get('total')) and a['total'] >= min_score:
-            values.append({'listing': item, 'analysis': a, 'price_1m':observations[item['id']][1].get('price_1m'), 'research':latest.get((item['id'],'research_opinions'),{}).get('data',{}), 'price_levels':price_levels(a,latest.get((item['id'],'research_opinions'),{}).get('data',{}))})
+            values.append({'listing': item, 'analysis': a, 'price_1m':newest_chart(latest.get((item['id'],'monthly_chart'),{}).get('data',{}).get('chart'),observations[item['id']][1].get('price_1m')), 'research':latest.get((item['id'],'research_opinions'),{}).get('data',{}), 'price_levels':price_levels(a,latest.get((item['id'],'research_opinions'),{}).get('data',{}))})
     values.sort(key=lambda r: (-r['analysis']['total'], r['listing']['market'], r['listing']['code']))
 
     fund_by_ticker = defaultdict(list)
@@ -165,7 +170,7 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
                 rec = latest.get((fund['id'],kind))
                 if rec:
                     links.append({**rec, 'fund':fund['ticker'], 'weight':weight, 'relation':'holdings' if weight is not None else 'sector'})
-        rows.append({'research':latest.get((lid,'research_opinions'),{}).get('data',{}),'price_levels':price_levels(analysis,latest.get((lid,'research_opinions'),{}).get('data',{})), 'listing':item, 'sector':sector, 'checks':checks, 'leadership':observed, 'analysis':analysis, 'etf_institution':links})
+        rows.append({'price_1m':newest_chart(latest.get((lid,'monthly_chart'),{}).get('data',{}).get('chart'),signals.get('price_1m')), 'research':latest.get((lid,'research_opinions'),{}).get('data',{}),'price_levels':price_levels(analysis,latest.get((lid,'research_opinions'),{}).get('data',{})), 'listing':item, 'sector':sector, 'checks':checks, 'leadership':observed, 'analysis':analysis, 'etf_institution':links})
     direct_ids = {x['id'] for x in corporations if query.strip() and (query.strip().casefold() in x['name'].casefold() or query.strip().casefold() in (x['ticker'].casefold(),x['code'].casefold()))}
     rows.sort(key=lambda r: (bool(query.strip()) and r['listing']['id'] not in direct_ids, -(r['leadership']['score'] if finite(r['leadership']['score']) else -1), -len(r['etf_institution']), r['listing']['market'],r['listing']['code']))
     source_health = health(con)
@@ -181,5 +186,25 @@ def build_report(con, market=None, query='', min_score=60, observation_offset=0,
                           'eligible':sum(v['listing']['market']==code for v in values),
                           'complete':bool(snapshot and snapshot['complete']), 'as_of':snapshot['observed_at'] if snapshot else None,
                           'source':snapshot['source'] if snapshot else None, 'status':source_health.get(code,{}).get('status','not_collected')}
+    from .book_value import assess
+    news = build_news_candidates(con, corporations, price_eligible)
+    memberships = {'가치투자1': {r['listing']['id'] for r in values},
+                   '뉴스': {r['listing']['id'] for r in news},
+                   '섹터주도주': {r['listing']['id'] for r in rows}}
+    books = []
+    for item in corporations:
+        if item['id'] not in price_eligible:
+            continue
+        analysis = analyses.get((item['market'], item['ticker']), {})
+        metrics = analysis.get('metrics', {})
+        assessment = assess(metrics, 5)
+        if not assessment:
+            continue
+        research = latest.get((item['id'], 'research_opinions'), {}).get('data', {})
+        books.append({'listing':item, 'analysis':analysis, 'assessment':assessment,
+                      'overlap':[label for label, ids in memberships.items() if item['id'] in ids],
+                      'price_levels':price_levels(analysis, research),
+                      'price_1m':newest_chart(latest.get((item['id'],'monthly_chart'),{}).get('data',{}).get('chart'), observations[item['id']][1].get('price_1m'))})
+    books.sort(key=lambda r:(not r['assessment']['verified'], r['assessment']['pbr'], r['listing']['market'], r['listing']['code']))
     return {'generated':now().isoformat(timespec='minutes'), 'selected_market':market, 'query':query, 'min_score':min_score,
-            'observations':_page(rows,observation_offset,limit), 'value_candidates':_page(values,value_offset,limit), 'coverage':coverage, 'news_candidates':build_news_candidates(con,corporations,price_eligible)}
+            'observations':_page(rows,observation_offset,limit), 'value_candidates':_page(values,value_offset,limit), 'coverage':coverage, 'news_candidates':news, 'book_candidates':books}
