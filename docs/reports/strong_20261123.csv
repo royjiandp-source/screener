@@ -1,0 +1,37 @@
+﻿market,ticker,name,index,price,signal,score,Stock trend % / 종목 추세,Index trend % / 지수 추세,ma60_slope_%,idx_ma60_slope_%,Beat index 1M % / 지수 대비 1개월,above_ma20,above_ma60,aligned_5_10_20,themes,ai_comment
+SG,H78.SI,Hongkong Land,STI,8.41,STRONG,22.26,0.6,-1.84,0.04,-1.69,13.37,True,True,False,Real Estate / Real Estate - Development,"Hongkong Land reported a 38% rise in its third-quarter underlying profit and subsequently raised its full-year earnings guidance. It now expects full-year EPS growth to reach the ""high teens"" range, driving its outperformance relative to the benchmark index.
+
+KR: 홍콩랜드는 3분기 기저 이익이 38% 증가함에 따라 연간 실적 전망을 상향 조정했습니다. 회사는 이제 연간 주당순이익(EPS) 성장률이 10% 후반대에 달할 것으로 예상하며 지수 대비 강세를 이끌고 있습니다."
+SG,Z74.SI,Singtel,STI,4.12,STRONGER,15.6,-0.31,-1.84,-1.36,-1.69,10.54,True,False,False,Communication Services / Telecom Services,"Singtel is likely stronger than the index due to encouraging H1 financial results that prompted analysts to maintain their buy calls. Additionally, reports suggest the stock may still be trading below its fair value despite its recent run.
+
+KR: 싱텔은 애널리스트들의 매수 의견 유지를 이끌어낸 긍정적인 상반기 실적 덕분에 지수보다 강세를 보이는 것으로 보입니다. 아울러 최근 상승세에도 불구하고 주가가 여전히 적정 가치 이하일 수 있다는 점도 기여하고 있습니다."
+KR,001080.KS,MH머트리얼즈,KOSPI,5030.0,STRONG,85.9,6.98,-2.89,3.84,-4.22,60.16,True,True,True,,"The stock is likely outperforming the index because the company announced the sale of Gangnam real estate for 10.7 billion KRW to secure liquidity. This asset disposal provided a positive financial boost even as the broader market declined.
+
+KR: 이 종목이 지수보다 강세를 보이는 것은 유동성 확보를 위해 107억 원 규모의 강남 부동산을 매각했다는 공시 때문일 가능성이 높습니다. 자산 처분을 통한 자금 확보 조치가 지수 하락세 속에서 호재로 작용한 것으로 보입니다."
+KR,035900.KQ,JYP Ent.,KOSDAQ,46200.0,STRONG,73.99,5.13,-3.85,1.3,-3.47,50.04,True,True,True,,"JYP Ent. is outperforming the index likely due to simultaneous net buying by foreign and institutional investors. Furthermore, it was the only company among the top four entertainment firms to recently have its target price raised.
+
+KR: JYP Ent.는 외국인과 기관의 동시 순매수가 유입되며 지수 대비 강세를 보이고 있습니다. 아울러 주요 엔터 4사 중 유일하게 목표주가가 상향 조정된 점이 긍정적으로 작용한 것으로 보입니다."
+KR,282720.KQ,금양그린파워,KOSDAQ,8890.0,STRONG,73.49,3.91,-3.85,2.41,-3.47,53.98,True,True,False,,"The stock is significantly outperforming the index due to the announcement of a massive 230 billion KRW AI data center construction contract. This major contract win triggered a sharp price surge of over 22–23%, driving strong upward momentum even as the broader KOSDAQ index declined.
+
+KR: 해당 종목은 2,300억 원 규모의 AI 데이터센터 공사 수주 소식에 힘입어 지수 대비 강세를 보이고 있습니다. 이 대형 수주 호재로 주가가 22~23%대 급등하며 하락세인 시장 지수와 반대로 강력한 상승세를 나타냈습니다."
+KR,035760.KQ,CJ ENM,KOSDAQ,51700.0,STRONG,70.02,4.09,-3.85,4.4,-3.47,48.15,True,True,True,,"The provided headlines regarding channel fee disputes and European content promotion do not clearly explain the stock's strong performance relative to the index. Therefore, the specific reason for CJ ENM's relative strength cannot be determined from the available information.
+
+KR: 제공된 헤드라인은 채널 송출료 갈등 및 해외 콘텐츠 홍보 관련 내용으로 지수 대비 주가의 강세를 명확히 설명하지 못합니다. 따라서 주어진 정보만으로는 해당 종목이 상대적 강세를 보이는 구체적인 이유를 파악할 수 없습니다."
+KR,476080.KQ,M83,KOSDAQ,4735.0,STRONG,68.7,6.17,-3.85,1.51,-3.47,42.68,True,True,True,,"M83 is likely outperforming the index due to reporting record-high Q3 earnings with 97.6 billion KRW in revenue and 8.8 billion KRW in operating profit. Additionally, sentiment was bolstered by news that its affiliate P&T Link secured a large-scale 63 billion KRW server contract from Naver.
+
+KR: M83는 3분기 매출액 976억 원, 영업이익 88억 원으로 역대 최대 실적을 달성한 점이 강세의 주요 원인으로 보입니다. 아울러 피앤티링크가 네이버로부터 630억 원 규모의 대형 서버 수주를 확보했다는 소식이 주가를 유인했습니다."
+KR,002900.KS,TYM,KOSPI,6910.0,STRONG,68.34,5.62,-2.89,0.32,-4.22,45.32,True,True,True,,"TYM is outperforming the index likely due to strong revenue expectations, with headlines highlighting that the company is approaching 1 trillion won in sales by focusing on its core agricultural machinery business. This solid business performance sets it apart from the declining broader market.
+
+KR: TYM이 본업인 농기계 사업에 집중하여 4년 만에 매출 1조 원 달성을 눈앞에 두고 있다는 실적 호조 소식이 가장 유력한 원인으로 보입니다. 이러한 견조한 매출 성장이 하락세인 시장 지수 대비 상대적 강세를 이끌고 있습니다."
+KR,073490.KQ,LIG아큐버,KOSDAQ,31400.0,STRONG,65.91,5.1,-3.85,0.1,-3.47,42.02,True,True,True,,"The stock is likely outperforming the index because Hana Securities highlighted LIG Accuver as a key beneficiary of SpaceX. This positive attention regarding its SpaceX beneficiary status has driven its relative strength despite the declining index.
+
+KR: 하나증권이 LIG아큐버를 스페이스X 수혜주로 꼽으며 주목한 점이 주가 강세의 가장 유력한 원인으로 보입니다. 이러한 스페이스X 수혜주로서의 부각이 지수 하락세 속에서도 상대적 강세를 이끌었습니다."
+KR,034120.KS,SBS,KOSPI,13190.0,STRONG,62.7,3.63,-2.89,-0.21,-4.22,43.66,True,True,True,,"The provided headlines only consist of daily news previews and general business reporting, which do not offer any specific reason for the stock's outperformance. Therefore, the given information does not explain why SBS is performing significantly stronger than the KOSPI index.
+
+KR: 제공된 뉴스 헤드라인은 일반 뉴스 예고와 경제 기사에 불과하여 주가 강세의 구체적인 원인을 제공하지 않습니다. 따라서 주어진 정보만으로는 SBS가 코스피 지수보다 강세를 보이는 이유를 설명할 수 없습니다."
+KR,006840.KS,AK홀딩스,KOSPI,7550.0,STRONG,53.63,3.08,-2.89,-0.39,-4.22,35.68,True,True,True,,"The provided headlines do not explain the reason for the stock's strong relative outperformance compared to the index. The news only mentions an executive promotion and concerns regarding the loss of a major cash cow.
+
+KR: 제공된 헤드라인으로는 해당 종목이 지수 대비 강세를 보이는 명확한 이유를 설명하지 못합니다. 뉴스 내용은 정기 임원 인사 소식과 주요 자회사 매각에 따른 우려만을 다루고 있습니다."
+KR,218410.KQ,RFHIC,KOSDAQ,52700.0,STRONG,51.9,3.76,-3.85,1.15,-3.47,30.68,True,True,True,,"RFHIC is outperforming the index primarily because Hana Securities highlighted it as a key beneficiary of SpaceX. Additionally, the stock is benefiting from simultaneous net buying by both foreign and institutional investors.
+
+KR: RFHIC는 하나증권으로부터 스페이스X 수혜주로 주목받으며 지수 대비 강세를 보이고 있습니다. 또한, 외국인과 기관 투자자의 동시 순매수가 유입되고 있는 점도 주가를 견인하고 있습니다."
